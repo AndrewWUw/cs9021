@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Takes as single argument the name of a file F1 meant to contain some source code
+# for a C program. The filename is expected to end in .c but the .c extension can be omitted,
+# and is converted to an absolute pathname if it is relative.
+# The script exits if F1 is not found to exist;
+# otherwise, the _getfilenames perl script is called with F1 provided as argument and returns
+# - the absolute path to the directory D that contains a .c file, say F2,
+#   containing a main() function,
+# - the absolute pathname to F2, and
+# - the absolute pathnames to the .c files possibly mentioned in F1 after a line that contains
+# 'Other .c source files, if any, one per line, starting on the next line:'.
+# Then the _mmakafile perl script is called to produces a Makefile for compilation
+# of all arguments with the -std=gnu99, -Wall (all warnings) and -g (for debugging purposes)
+# options enabled.
+# The Makefile will be created in D if no Makefile indicated to be created by _mmakefile
+# is found in D, or if the user allows the script to overwrite the Makefile.
+# The user will be informed that the Makefile will be created in D in case it is different
+# to the directory where the script is being executed.
+# The script recognizes the dependencies on header files that occur in the
+# ~/COMP9021/include directory and on the <math.h> header file.
+# For the first kind of header file, the script makes sure that
+# the corresponding libraries from the ~/COMP9021/lib directory
+# are passed as arguments to the linker.
+# For both kinds of header files, the script makes sure that
+# the -lm option is provided to gcc.
+
+# Written by Eric Martin for COMP9021
+
+if [ $# != 1 ] ; then
+    echo The name of a file containing some C source code should be provided as argument.
+    exit 1
+fi
+# Do not change the argument if it ends in .c; append .c otherwise.
+file="${1%.c}.c"
+if [ ! -e "$file" ] ; then
+    echo "I cannot find "$file", so I leave it there."
+    exit 1
+fi
+
+# Precede relative filenames that do not start with / or ~
+# with the absolute pathname of the working directory ending in /.
+if echo "$file" | grep -qs '^[^/~]' ; then
+    file="$(pwd)/$file"
+# Replace an initial ~ with the absolute pathname of the home directory.
+elif echo "$file" | grep -qs '^~' ; then
+    file=$(echo "$file" | sed 's/.//')
+    file=$HOME$file
+# Precede an initial dot (whether this dot denotes the working directory,
+# is the first dot of the two dots that denote the parent of the working directory,
+# or is the first dot of a file or a directory name that starts with a dot)
+# with the absolute pathname of the working directory ending in /..
+elif echo "$file" | grep -qs '^\.' ; then
+    file=$(pwd)/$file
+fi
+
+# _getfilename will be confused if it is called from a directory different
+# to the directory that contains the file it will read to possibly extract filenames.
+# We remember the current directory so that we can inform the user that the Makefile
+# is created in a directory different to the one from which the script is being executed,
+# if that is the case.
+original_dir=$(pwd)
+file_dir=$(dirname "$file")
+cd "$file_dir"
+
+getfilename_output=$(_getfilenames "$file")
+if [ $? -ne 0 ] ; then
+    exit 1;
+fi
+# Extract the name of the directory where the file with the main() function resides.
+main_dir=$(echo "$getfilename_output" | sed 's/ .*//')
+main_dir=$(echo "$main_dir" | tr '' ' ')
+
+# If a Makefile produced by _mmakefile already exists
+# then this Makefile is automatically removed.
+# Otherwise, the script prompts the user to whether the existing Makefile
+# can be removed, proceeds if user answers yes, and exits otherwise.
+if [ -e "${main_dir}Makefile" ] &&
+	 ! grep -qs '^# Makefile produced by _mmakefile$' "${main_dir}Makefile" ; then
+    echo A makefile already exists
+    while true; do
+	echo -n 'Do you want to replace the existing Makefile (yes/no)? '
+	read
+	if [ $REPLY = yes -o $REPLY = y ] ; then
+	    break
+	elif [ $REPLY = no -o $REPLY = n ] ; then
+	    exit 0
+	else
+	    echo -n 'Incorrect answer. '
+	fi
+    done
+fi
+
+_mmakefile $getfilename_output
+if [ $? -ne 0 ] ; then
+    exit 1;
+elif [ "$main_dir" != "$original_dir/" ] ; then
+    echo Makefile created in "$main_dir"
+fi
+

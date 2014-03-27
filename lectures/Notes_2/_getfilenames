@@ -1,0 +1,86 @@
+#!/usr/bin/perl
+
+# Takes a single absolute pathname to a .c file as argument and extracts from this file
+# the pathnames that occur after a line that contains an occurrence of
+# "Other .c source files, if any, one per line, starting on the next line:",  possibly
+# preceded and followed by stars or spaces, and a line all of whose nonblanks characters
+# are stars, with a closing comment */ after all stars.
+# Lines containing blanks or stars only can be inserted in-between.
+# Pathnames can contain spaces, are expected to be to files with a .c extension
+# but allow the .c extension to be left out, can be relative or absolute but should
+# not start in ~, and can be preceded or followed by spaces or stars.
+# The script succeeds if all files are found to exist and one and only one file contains
+# "int main(" or "void main(", possibly with spaces between "main"
+# and the opening parenthesis.
+# Relative pathnames are converted to absolute pathnames and the .c extension is added if missing.
+# The name of the directory where the file that contains the main() function is output first,
+# followed by the pathname of this file, followed by the pathnames of all files
+# (including the latter) sorted in lexicographic order, separated by spaces.
+# Moreover, spaces in pathnames are replaced by Control B characters.
+# The argument is assumed to be a correct pathname. The pathnames that are extracted
+# form the file whose pathname is passed as argument are checked to exist, and the script
+# dies in case one such check fails.
+
+use Cwd 'realpath';
+use File::Basename;
+
+my @source_files = realpath($ARGV[0]);
+my $reading_file_names;
+while (<>) {
+  if (m/Other source files, if any, one per line, starting on the next line:/) {
+    $reading_file_names = 1;
+    next;
+  }
+  if ($reading_file_names) {
+    # Nothing but blanks and stars, a closing comment, and blanks.
+    if (m{^[\s*]*\*/[\s*]$}) {
+      last;
+    }
+     elsif (m/^[\s*]*$/) {
+       next;
+     }
+    else {
+      # Getting rid of spaces and stars before and after pathname.
+      s/^[\s*]*(.*?)[\s*]*$/\1/;
+      # Adding the .c extension if needed.
+      if (!m/\.c$/) {
+	$_ .= ".c";
+      }
+     # Converting to an absolute pathname.
+     die "I cannot find $_, so I leave it there.\n"
+	if (!-e "$_");
+      $source_file = realpath($_);
+      push @source_files, "$source_file";
+    }
+  }
+}
+my $main_source_file;
+foreach (@source_files) {
+  open my $source_file, '<', $_
+    or die "I cannot see what is in $_, so I leave it there.\n";
+  if (grep /(^|\s)+(void|int)\s+main\s*\(/, <$source_file>) {
+    die "At least two source files contain a main function, so I leave it there.\n"
+      if ($main_source_file);
+    # Replacing spaces by Control B characters in pathname of file that contains main().
+    $_ =~ s/ //g;
+    $main_source_file = $_;
+  }
+  # Replacing spaces by Control B characters in other pathnames.
+  else {
+    $_ =~ s/ //g;
+  }
+  close $source_file;
+}
+die "I cannot find a main function in any source file, so I leave it there.\n"
+  if (!$main_source_file);
+# Element of index one of array returned by fileparse() is the directory part of the pathname
+# given as argument (the directory is not checked to be valid, so the Control B characters
+# aren't a problem).
+my @main_source_file_path_parts = fileparse($main_source_file);
+@source_files = sort @source_files;
+# Separate pathnames by spaces.
+$, = ' ';
+print $main_source_file_path_parts[1], $main_source_file, @source_files;
+
+
+

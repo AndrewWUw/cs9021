@@ -1,0 +1,792 @@
+#!/usr/bin/perl
+# Written by Eric Martin for COMP9021
+
+die "Expecting two arguments: a file containing C source code and a file named style_sheet.txt.\n"
+  if @ARGV != 2;
+if ($ARGV[0] !~ /\.c$/) {
+  $ARGV[0] .= ".c";
+}
+if ($ARGV[1] !~ /\.txt$/) {
+  $ARGV[1] .= ".txt";
+}
+open $source_file, '<', $ARGV[0] or
+  die "I cannot find $ARGV[0], so Im leave it there: $!\n";
+open $style_sheet, '<', $ARGV[1] or
+  die "I cannot find $ARGV[1], so I leave it there: $!\n";
+
+my $program = join '', <$source_file>;
+close $source_file;
+
+if ($program =~ /\t/) {
+  print "The source file contains tabs.\n";
+  print "Please replace the tabs by spaces and run the script again.\n";
+  exit 1;
+}
+
+# To match a block surrounded by curly braces, in which the curly braces are well balanced.
+# Matches {,
+# then matches a sequence of symbols distinct from { and },
+# then matches a sequence of the form
+# pattern_being_defined followed by a sequence of symbols distinct from { and },
+# and eventually matches }.
+$cb_block = qr{\{[^{}]*(?:(??{$cb_block})[^{}]*)*\}};
+
+# To match a block surrounded by parentheses, in which the parentheses are well balanced.
+$p_block = qr{\([^()]*(?:(??{$p_block})[^()]*)*\)};
+
+# Mismatches, if any, will be written into a file of the form name.style.txt,
+# where name is $source_file stripped from the final .c.
+my $source_style = $ARGV[0];
+$source_style =~ s/c$/style.txt/;
+open $source_style, '>', $source_style
+  or die "Cannot open file $source_style: $!";
+select $source_style;
+
+my %constraints;
+my $reached_constraints;
+while (<$style_sheet>) {
+  if (!$reached_constraints) {
+    if (/VARIABLE CONSTRAINTS \(CAN BE CHANGED\)/) {
+      $reached_constraints = 1;
+    }
+  }
+  else {
+    if (!m/^\s$/) {
+      /\s*(.*[^\s])\s+([^\s]+)\s*$/;
+      $constraints{$1} = $2;
+      }
+  }
+}
+close $style_sheet;
+
+# Gets rid of comments, as described in perlfaq6 
+$program =~ s!/\*[^*]*\*+([^/*][^*]*\*+)*/|//[^\n]*|("(\\.|[^"\\])*"|'(\\.|[^'\\])*'|.[^/"'\\]*)!defined $2 ? $2 : ""!gse;
+
+# Gets rid of preprocessor directives
+$program =~ s/(^|\n)[[:space:]]*#[^\n]*//g;
+
+@keywords = qw/if else for while do switch case default/;
+
+# To easily match the keywords, surrounds them with a pair of ^K,
+# and define a variable for each resulting expression.
+foreach (@keywords) {
+  $program =~ s/\b$_\b/$&/g;
+}
+
+# Surround the while of a do while structure with a pair of 
+# rather than with a pair of .
+$program =~ s/(o[[:space:]]*$cb_block[[:space:]]*)while/$1while/sg;
+$program =~ s/(o[[:space:]]*[^[:space:]{].*?)while/$1while/sg;
+
+my $if = qw{if};
+my $else = qw{else};
+my $for = qw{for};
+my $while = qw{while};
+my $do = qw{do};
+my $switch = qw{switch};
+my $case = qw{case};
+my $default = qw{default};
+
+# Stores literal strings in @strings, and replaces in the source code
+# the ($i+1)th literal string being processed by #^S$i#.
+# Matches " preceded by neither ' nor \,
+# then matches the shortest sequence of symbols that, for any backslash it contains,
+# also contains the symbol after that backslash,
+# then matches ".
+my @strings;
+my $i = 0;
+while ($program =~ s/([^\\'])(\"(?:[^\\]|\\.)*?\")/$1#$i#/) {
+  push @strings, "$2";
+  ++$i;
+}
+
+# Stores literal characters in @characters, and replaces in the source code
+# the ($i+1)th literal character being processed by #^L$i#.
+my @characters;
+$i = 0;
+while ($program =~ s/('.')/#$i#/) {
+  push @characters, "$1";
+  ++$i;
+}
+
+# Stores arrays initialisations in @array_inits, and replaces in the source code
+# the ($i+1)th array initialisation being processed by #^L$i#.
+my @array_inits;
+$i = 0;
+while ($program =~ s/(=[[:space:]]*$cb_block)/#$i#/) {
+  push @array_inits, "$1";
+  ++$i;
+}
+
+# Surrounds the parenthesized heads of while, for, if and switch statements with a pair of ^P.
+$program =~ s/((?:$while|$for|$if|$switch)\s*)($p_block)/$1$2/g;
+
+# Replaces semicolons in head of for loop by ^F,
+# so that the only semicolons that remain mark the end of statements.
+my $before_for_head, my $for_head;
+my $examined = "";
+my $to_examine = $program;
+while ($to_examine =~ /($for\s*)($p_block)/) {
+  $before_for_head = "$`$1";
+  $for_head = $2;
+  $to_examine = $';
+  $for_head =~ s/;//g;
+  $examined .= "$before_for_head$for_head";
+}
+$program =~ s/.*/$examined$to_examine/s;
+
+# When the last nonblank character on a line is neither a semicolon,
+# nor a curly brace that indicates the beginning or the end of a block,
+# nor a parenthesis that closes the head of a while, for, if or switch statement,
+# nor a colon that follows a case
+# then we are in a (probably long) statement split over many lines,
+# and we replace embedded new line characters with ^Q
+# to properly compute indentation levels and values.
+# In case the opening curly brace of a function body is not on the same line as the parenthesis that closes
+# its list of arguments, a ^Q will be introduced and the new line character will have to be restored.
+$program =~ s/([^\s;{}:] *)\n/$1/g;
+$program =~ s/($case *: *)\n/$1/g;
+
+# From the beginning of the file or the beginning of a line,
+# matches any sequence of symbols,
+# then the function name---an identifier, possibly followed by spaces,
+# then the sequence of parameters---surrounded by parenthesis, possibly followed by spaces,
+# then the function body---surrounded by curly braces, possibly followed by spaces,
+# and finally a new line character.
+# Each iteration of the while loop takes care of one function definition,
+# erasing one function definition from $program ad adding it to @functions.
+# In case the opening curly brace of the function's body is not on the same line as the parenthesis
+# that closes its list of arguments, we replace the ^Q character that we have introduced by a new line character.
+my @functions;
+$i = 0;
+while ($program =~ s/((^|\n)[^\n]*\w+\s*$p_block\s*)(?)(\s*$cb_block\s*?\n)/\n/) {
+  my $function = "$1$3$4";
+  $function =~ s//\n/;
+  $function =~ s///;
+  push @functions, "$function";
+  ++$i;
+}
+
+my $warnings;
+
+# Counter for the number of mismatches being detected.
+my $mismatch;
+
+&check_constraints_on_opening_curly_braces;
+&check_constraints_on_closing_curly_braces;    
+&check_constraints_on_semicolons;
+&check_constraints_on_bodies;
+&check_constraints_on_cases;
+
+if ($mismatch) {
+  print "Other constraints will not be tested, please fix current mismatches.\n";
+  &print_functions;
+  close $source_style;
+  select STDOUT;
+  print "$mismatch stylistic mismatch";
+  $mismatch > 1 ? print "es of fixed contraints have " : print " of fixed contraints has ";
+  print "been detected.\n\n";
+  print "The details are recorded in $source_style\n";
+  exit;
+}
+
+if (!exists $constraints{'Opening curly braces on same line as function name to open function body'}) {
+  $warnings = 1;
+  print STDOUT "Cannot find your choice for the constraint
+    Opening curly braces on same line as function name to open function body\n";
+}
+else {
+  my $choice = $constraints{'Opening curly braces on same line as function name to open function body'};
+  if ($choice eq 'yes' || $choice eq 'Yes' || $choice eq 'YES') {
+    &opening_brace_of_function_body_on_same_line_as_function_name;
+  }
+  elsif ($choice eq 'no' || $choice eq 'No' || $choice eq 'NO') {
+    &opening_brace_of_function_body_not_on_same_line_as_function_name;
+  }
+  else {
+    $warnings = 1;
+    print STDOUT "Your choice of \"$choice\" for the constraint
+    Opening curly braces on same line as function name to open function body
+is invalid; it should be either \"yes\" or \"no\".\n"
+  }
+}
+
+if (!exists $constraints{'Opening curly braces on same line as while, do, for, if, else or switch to open block'}) {
+  $warnings = 1;
+  print STDOUT "Cannot find your choice for the constraint
+    Opening curly braces on same line as while, do, for, if, else or switch to open block\n";
+}
+else {
+  my $choice = $constraints{'Opening curly braces on same line as while, do, for, if, else or switch to open block'};
+  if ($choice eq 'yes' || $choice eq 'Yes' || $choice eq 'YES') {
+    &opening_brace_of_block_on_same_line_as_keyword;
+  }
+  elsif ($choice eq 'no' || $choice eq 'No' || $choice eq 'NO') {
+    &opening_brace_of_block_not_on_same_line_as_keyword;
+  }
+  else {
+    $warnings = 1;
+    print STDOUT "Your choice of \"$choice\" for the constraint
+    Opening curly braces on same line as while, do, for, if, else or switch to open block
+is invalid; it should be either \"yes\" or \"no\".\n"
+  }
+}
+
+if (!exists $constraints{'If directly following else is on same line as else'}) {
+  $warnings = 1;
+  print STDOUT "Cannot find your choice for the constraint
+    If directly following else is on same line as else\n";
+}
+else {
+  my $choice = $constraints{'If directly following else is on same line as else'};
+  if ($choice eq 'yes' || $choice eq 'Yes' || $choice eq 'YES') {
+    &if_on_same_line_as_else;
+  }
+  elsif ($choice eq 'no' || $choice eq 'No' || $choice eq 'NO') {
+    &if_not_on_same_line_as_else;
+  }
+  else {
+    $warnings = 1;
+    print STDOUT "Your choice of \"$choice\" for the constraint
+    If directly following else is on same line as else
+is invalid; it should be either \"yes\" or \"no\".\n"
+  }
+}
+
+if (!exists $constraints{'Else following closing brace of body of if statement is on same line as brace'}) {
+  $warnings = 1;
+  print STDOUT "Cannot find your choice for the constraint
+    Else following closing brace of body of if statement is on same line as brace\n";
+}
+else {
+  my $choice = $constraints{'Else following closing brace of body of if statement is on same line as brace'};
+  if ($choice eq 'yes' || $choice eq 'Yes' || $choice eq 'YES') {
+    &else_on_same_line_as_closing_brace;
+  }
+  elsif ($choice eq 'no' || $choice eq 'No' || $choice eq 'NO') {
+    &else_not_on_same_line_as_closing_brace;
+  }
+  else {
+    $warnings = 1;
+    print STDOUT "Your choice of \"$choice\" for the constraint
+    Else following closing brace of body of if statement is on same line as brace
+is invalid; it should be either \"yes\" or \"no\".\n"
+  }
+}
+
+if ($mismatch) {
+  print "This has to be fixed for indentation values and levels to be checked.\n";
+}
+else {
+  my $indent;
+  if (!exists $constraints{'Number of spaces for indentation (may vary between 3 and 5)'}) {
+    $warnings = 1;
+    print STDOUT "Cannot find your choice for the constraint
+    Number of spaces for indentation (may vary between 3 and 5)\n";
+  }
+  else {
+    $indent = $constraints{'Number of spaces for indentation (may vary between 3 and 5)'};
+    if ($indent != 3 && $indent != 4 && $indent != 5) {
+      $warnings = 1;
+      print STDOUT "\"$indent\" is an invalid indentation value.\n";
+    }
+    else {
+      &check_indentation($indent);
+    }
+  }
+  if ($mismatch) {
+    print "$mismatch indentation ";
+    $mismatch > 1 ? print "mismatches have " : print "mismatch has ";
+    print "been detected.\n";
+    print "This has to be fixed for indentation levels to be checked.\n";
+  }
+  else {
+    if (!exists $constraints{'Maximum level of indentation'}) {
+      $warnings = 1;
+      print STDOUT "Cannot find your choice for the constraint
+    Maximum level of indentation\n";
+    }
+    else {
+      $indent = $constraints{'Maximum level of indentation'};
+      if ($indent !~ /^+?\d+$/) {
+	$warnings = 1;
+	print STDOUT "\"$indent\" is an invalid indentation level value.\n";
+      }
+      else {
+	foreach (@functions) {
+	  my $spaces = $indent * 4 + 1;
+	  $mismatch += s/\n( {$spaces}.*[^\s])/\n\@\@$1/g;
+	}
+	if ($mismatch) {
+	  print "$mismatch ";
+	  $mismatch > 1 ? print "occurrences " : print "occurrence ";
+	  print "of excessive statement depth ";
+	  $mismatch > 1 ? print "have " : print "has ";
+	  print "been detected.";
+	}
+      }
+    }
+  }
+}
+if ($mismatch) {
+  &print_functions;
+  close $source_style;
+  select STDOUT;
+  print "$mismatch stylistic mismatch";
+  $mismatch > 1 ? print "es have " : print " has ";
+  print "been detected.\n\n";
+  print "The details are recorded in $source_style\n";
+}
+else {
+  close $source_style;
+  unlink $source_style;
+  select STDOUT;
+  if ($warnings == 0) {
+    print "No stylistic mismatch has been detected.\n";
+  }
+}
+
+sub print_functions {
+  # Restores the literal strings.
+  foreach $function (@functions) {
+    my $i = 0;
+    foreach (@strings) {
+      $function =~ s/#$i#/$_/g;
+      ++$i;
+    }
+  }
+  # Restores the literal characters.
+  foreach $function (@functions) {
+    my $i = 0;
+    foreach (@characters) {
+      $function =~ s/#$i#/$_/g;
+      ++$i;
+    }
+  }
+  # Restores the array initialisations.
+  foreach $function (@functions) {
+    my $i = 0;
+    foreach (@array_inits) {
+      $function =~ s/#$i#/$_/g;
+      ++$i;
+    }
+  }
+  # Restores semicolons in heads of for statements.
+  foreach (@functions) {
+    s//;/g;
+  }
+  # Restores new lines in statements that span many lines
+  foreach (@functions) {
+    s//\n/g;
+  }
+  # Gets rid of all ^K,  and ^P characters around keywords and heads of structures.
+  foreach (@functions) {
+    s/[]//g;
+  }
+  if ($mismatch) {
+    print "\n@functions";
+  }
+}
+
+sub check_constraints_on_opening_curly_braces {
+  my $flag;
+  foreach (@functions) {
+      # Looking for leftmost opening curly brace followed by nonblank character.
+      $flag += s/((^|\n)[^\n{]*){( *[^\s])/$1\@\@{$3/g;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Opening curly brace not at end of line ($flag).\n";
+  }
+}
+
+sub check_constraints_on_closing_curly_braces {
+  my $after_flag, my $before_flag;
+  foreach (@functions) {
+    # Nonblank character before closing curly brace that is followed by spaces only.
+    $before_flag += s/([^\s] *)}( *\n)/$1\@\@}$2/g;
+    # Nonblank character that does not start a keyword after closing curly brace
+    $after_flag += s/(${cb_block})( *[^\s])/$1\@\@$2/g;
+    # Keyword different to else after closing curly brace of an if structure
+    $after_flag += s/($if\s*[^]*\s*${cb_block})( *[^e])/$1\@\@$2/g;
+    # Keyword after closing curly brace of an else, for, while or switch structure
+    $after_flag += s/([^f]\s*[^]*\s*${cb_block})( *[])/$1\@\@$2/g;
+
+  }
+  if ($after_flag) {
+    $mismatch += $after_flag;
+    print "Closing curly brace not followed by while or else and not at end of line ($after_flag).\n";
+  }
+  if ($before_flag) {
+    $mismatch += $before_flag;
+    print "Closing curly brace preceded by nonspace characters ($before_flag).\n";
+  }
+}
+
+sub check_constraints_on_semicolons {
+  my $after_flag, my $before_flag_for_empty_statement, my $before_flag_for_nonempty_statement;
+  foreach (@functions) {
+    # Nonblank character after semicolon
+    $after_flag += s/;( *[^\s])/;@@/g;
+    # Semicolons followed by only blank characters end an empty statement iff
+    # they follow ^K, ^P, an opening or closing curly brace, or a semicolon.
+    $before_flag_for_empty_statement += s/([{};] *)(; *\n)/$1\@\@$2/g;
+    $before_flag_for_nonempty_statement += s/([^{};\s] *\n *)(; *\n)/$1\@\@$2/g;
+    $before_flag_for_nonempty_statement += s/(\s*)(; *\n)/$1\@\@$2/g;
+  }
+  if ($after_flag) {
+    $mismatch += $after_flag;
+    print "Semicolon not in head of for statement not at end of line ($after_flag).\n";
+  }
+  if ($before_flag_for_empty_statement) {
+    $mismatch += $before_flag_for_empty_statement;
+    print "Semicolon ending empty statement not alone on its line ($before_flag_for_empty_statement).\n";
+  }
+  if ($before_flag_for_nonempty_statement) {
+    $mismatch += $before_flag_for_nonempty_statement;
+    print "Semicolon ending nonempty statement alone on its line ($before_flag_for_nonempty_statement).\n";
+  }
+}
+
+sub check_constraints_on_bodies {
+  my $while_flag, my $for_flag, my $if_flag, my $else_flag;
+  foreach (@functions) {
+    $while_flag += s/($while *[^]* *)([^{\s])/$1 \@\@ $2/g;
+    $while_flag += s/($while *[^]* *{ *)([^\s])/$1 \@\@ $2/g;
+    $for_flag += s/($for *[^]* *)([^{\s])/$1 \@\@ $2/g;
+    $for_flag += s/($for *[^]* *{ *)([^\s])/$1 \@\@ $2/g;
+    $if_flag += s/($if *[^]* *)([^{\s])/$1 \@\@ $2/g;
+    $if_flag += s/($if *[^]* *{ *)([^\s])/$1 \@\@ $2/g;
+    $else_flag += s/($else *)([^{\s])/$1 \@\@ $2/g;
+    $else_flag += s/($else *{ *)([^\s])/$1 \@\@ $2/g;
+    $else_flag += s/($else *)([^i])/$1 \@\@ $2/g;
+    $else_flag += s/($else *{ *)([^i])/$1 \@\@ $2/g;
+  }
+  if ($while_flag) {
+    $mismatch += $while_flag;
+    print "Body of while statement on same line as while keyword ($while_flag).\n";
+  }
+  if ($for_flag) {
+    $mismatch += $for_flag;
+    print "Body of for statement on same line as for keyword ($for_flag).\n";
+  }
+  if ($if_flag) {
+    $mismatch += $if_flag;
+    print "Body of if statement on same line as if keyword ($if_flag).\n";
+  }
+  if ($else_flag) {
+    $mismatch += $else_flag;
+    print "Body of else statement on same line as else keyword ($else_flag).\n";
+  }
+}
+
+sub check_constraints_on_cases {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/($case *[^\s]+ *:) *([^\s])/$1 \@\@ $2/g;
+    $flag += s/($default *[^\s]+ *:) *([^\s])/$1 \@\@ $2/g;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Case in switch statement not sitting alone on its line ($flag).\n";
+  }
+}
+
+sub opening_brace_of_function_body_on_same_line_as_function_name {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/(^\s*[^\s][^\n{]*\n\s*){/$1\@{\@/;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Opening brace of function body not on same line as function name ($flag).\n";
+  }
+}
+
+sub opening_brace_of_function_body_not_on_same_line_as_function_name {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/(^\s*[^\s][^\n]*){/$1\@{\@/;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Opening brace of function body on same line as function name ($flag).\n";
+  }
+}
+    
+sub opening_brace_of_block_on_same_line_as_keyword {
+  my $while_flag, my $do_flag, my $for_flag, my $if_flag, my $else_flag, my $switch_flag;
+  foreach (@functions) {
+    $while_flag += s/($while\s*[^]* *\n\s*){/$1\@{\@/g;
+    $do_flag += s/($do *\n\s*){/$1\@{\@/g;
+    $for_flag += s/($for\s*[^]* *\n\s*){/$1\@{\@/g;
+    $if_flag += s/($if\s*[^]* *\n\s*){/$1\@{\@/g;
+    $else_flag += s/($else *\n\s*){/$1\@{\@/g;
+    $switch_flag += s/($switch\s*[^]* *\n\s*){/$1\@{\@/g;
+  }
+  if ($while_flag) {
+    $mismatch += $while_flag;
+    print "Opening brace of while block not on same line as while ($while_flag).\n";
+  }
+  if ($do_flag) {
+    $mismatch += $do_flag;
+    print "Opening brace of do-while block not on same line as do ($do_flag).\n";
+  }
+  if ($for_flag) {
+    $mismatch += $for_flag;
+    print "Opening brace of for block not on same line as for ($for_flag).\n";
+  }
+  if ($if_flag) {
+    $mismatch += $if_flag;
+    print "Opening brace of if block not on same line as if ($if_flag).\n";
+  }
+  if ($else_flag) {
+    $mismatch += $else_flag;
+    print "Opening brace of else block not on same line as else ($else_flag).\n";
+  }
+  if ($switch_flag) {
+    $mismatch += $switch_flag;
+    print "Opening brace of switch block not on same line as switch ($switch_flag).\n";
+  }
+}
+
+sub opening_brace_of_block_not_on_same_line_as_keyword {
+  my $while_flag, my $do_flag, my $for_flag, my $if_flag, my $else_flag, my $switch_flag;
+  foreach (@functions) {
+    $while_flag += s/($while\s*[^]* *){/$1\@{\@/g;
+    $do_flag += s/($do *){/$1\@{\@/g;
+    $for_flag += s/($for\s*[^]* *){/$1\@{\@/g;
+    $if_flag += s/($if\s*[^]* *){/$1\@{\@/g;
+    $else_flag += s/($else *){/$1\@{\@/g;
+    $switch_flag += s/($switch\s*[^]* *){/$1\@{\@/g;
+  }
+  if ($while_flag) {
+    $mismatch += $while_flag;
+    print "Opening brace of while block on same line as while ($while_flag).\n";
+  }
+  if ($do_flag) {
+    $mismatch += $do_flag;
+    print "Opening brace of do-while block on same line as do ($do_flag).\n";
+  }
+  if ($for_flag) {
+    $mismatch += $for_flag;
+    print "Opening brace of for block on same line as for ($for_flag).\n";
+  }
+  if ($if_flag) {
+    $mismatch += $if_flag;
+    print "Opening brace of if block on same line as if ($if_flag).\n";
+  }
+  if ($else_flag) {
+    $mismatch += $else_flag;
+    print "Opening brace of else block on same line as else ($else_flag).\n";
+  }
+  if ($switch_flag) {
+    $mismatch += $switch_flag;
+    print "Opening brace of switch block on same line as switch ($switch_flag).\n";
+  }
+}
+    
+sub if_on_same_line_as_else {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/($else)( *\n\s*$if)/$1 \@\@ $2/s;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Else if not on same line ($no_flag).\n";
+  }
+}
+
+sub if_not_on_same_line_as_else {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/($else *)($if)/$1 \@\@ $2/s;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Else if on same line ($flag).\n";
+  }
+}
+    
+sub else_on_same_line_as_closing_brace {
+  my $flag, my $no_flag;
+  foreach (@functions) {
+    $flag += s/\} {2,}($else)/} \@\@ $1/s;
+    $no_flag += s/\} *(\n *$else)/} \@\@ $1/s;
+  }
+  if ($no_flag) {
+    $mismatch += $no_flag;
+    print "Else not on same line as brace closing body of if statement ($no_flag).\n";
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "More than one space between else and brace closing body of if statement ($flag).\n";
+  }
+}
+
+sub else_not_on_same_line_as_closing_brace {
+  my $flag;
+  foreach (@functions) {
+    $flag += s/\} +($else)/} \@\@ $1/s;
+  }
+  if ($flag) {
+    $mismatch += $flag;
+    print "Else on same line as brace closing body of if statement ($flag).\n";
+  }
+}
+
+sub check_indentation {
+  my $indentation_width = $_[0];
+  my $flag;
+  my $processed, my $unprocessed, my $line, my $rest;
+  my $if_statement, my $switch_statement;
+  my $level, my @levels;
+  my $spaces;
+  foreach (@functions) {
+    $level = 0;
+    @levels = $processed = "";
+    $unprocessed = $_;
+    # Processes input line by line.
+    while ($unprocessed =~ s/[^\n]*\n//) {
+      $line = $&;
+      $rest = $';
+      # Skips blank lines.
+      if ($line =~ /^\s*$/) {
+	$processed .= $line;
+	next;
+      }
+      # Current line L marks the end of a block.
+      # Its indentation level is recorded at the top of @levels,
+      # unless L is the end of a switch statement,
+      # in which case the top of @levels
+      # contains the indentation level of the statements in a case,
+      # recorded with a leading 0.
+      # or unless the previous statement was the unique statement
+      # of a while, do-while, for, if or else statement,
+      # whose indentation is at the top of @levels.
+      # In these two particular situations, the indentation of L
+      # is the penultimate member of @levels.
+      elsif ($line =~ /^\s*}/) {
+	do {
+	  $level = pop @levels;
+	} while ($level =~ /^0/ || $level < 0);
+      }
+      # If current line is case or default line of switch statement
+      # then the top of @levels contains the indentation level of switch,
+      # which is one less than the indentation level of the current line.
+      # We record the indentation level of the statements of a case,
+      # with a leading 0, which is equal to
+      # the indentation level of switch plus 2.
+      elsif ($line =~ /($case|$default)/) {
+	if (@levels[$#levels] !~ /^0/) {
+	  push @levels, "0" . (@levels[$#levels] + 2);
+	}
+	$level = @levels[$#levels] - 1;
+      }
+      # $level < 0 indicates that previous line is the head of a
+      # while, do-while, for, if or else statement S
+      # with no opening curly brace at the end of the line.
+      elsif ($level < 0) {
+	# If there is an opening curly brace on the current line,
+	# then we switch the sign of $level from negative to positive.
+	if ($line =~ /^\s*{/) {
+	  $level = abs($level);
+	}
+	# Otherwise, we are processing the only statement S' in the body of S.
+	else {
+	  # If S is an if statement, we look whether S has an associated else statement.
+	  if ($if_statement) {
+	    while ($rest =~ s/(.*?)$cb_block(.*)/$1$2/s) {
+	      ;
+	    }
+	    # If S has an associated else statement, then
+	    # we record in @levels the current value of $level,
+	    # namely, the indentation level of S.
+	    if ($rest =~ /^([^}]*?)$else/s && $line !~ /^\s*$if/s) {
+	      push @levels, $level;
+	    }
+	    $if_statement = 0;
+	  }
+	  # If S is itself the unique statement in the body of a
+	  # while, do-while, for, if or else statement,
+	  # then the top of @levels keeps track of the value of the indentation level
+	  # to return to after S' has been processed, and that value is a negative number.
+	  # Otherwise, we record in @levels the current value of $level,
+	  # namely, the indentation level of S.
+	  if (@levels[$#levels] >= 0) {
+	    push @levels, $level;
+	  }
+	  # In any case, we keep $level negative and add one level,
+	  # that is the expected indentation level of S'.
+	  --$level;
+	}
+      }
+      # Checks that indentation of current line is correct.
+      $spaces = abs($level) * $indentation_width;
+      if ($line !~ /^ {$spaces}[^\s]/) {
+	$line =~ s/^/\@\@/;
+	++$flag;
+      }
+      # If current line is case or default line of switch statement
+      # then the top of @levels contains the indentation level of the statements of a case.
+      if ($line =~ /($case|$default)/) {
+	$level = @levels[$#levels];
+      }
+      # If current line ends with an opening curly brace,
+      # then we keep or make $level positive,
+      # keep track of it at the top of @levels,
+      # and increment $level to get the indentation level
+      # for the next line to be processed.
+      elsif ($line =~ /\s*{\s*$/) {
+	$level = abs($level);
+	push @levels, $level++;
+      }
+      # If current line is the head of a
+      # while, do-while, for, if or else statement
+      # with no opening curly brace at the end of the line,
+      # then we make $level negative and delay the computation of $level
+      # for the next line to the next iteration of the loop.
+      # Moreover, if it is an if statement we record that fact,
+      # as we will have to check whether there is an associated else statement.
+      elsif ($line =~ /($while|$for).*\s*$/) {
+	$level = -abs($level);
+      }
+      elsif ($line =~ /$if.*/) {
+	$level = -abs($level);
+	$if_statement = 1;
+      }
+      elsif ($line =~ /($do|$else)/) {
+	$level = -abs($level);
+      }
+      # Current line marks the end of a block that is not the if part of an if-else statement.
+      elsif ($line =~ /}/ && $rest !~ /^\s*($else|})/s) {
+	# The end of the block is the end of a unique statement
+	# whose level is recorded at the top of @levels.
+	if (@levels[$#levels] < 0) {
+	  pop @levels;
+	}
+	# We might have hit the indentation level of the statements that make up a case
+	# in a switch statement.  
+	if (@levels[$#levels] =~ /^0[[:digit:]]/) {
+	  $level = @levels[$#levels];
+	}
+	# Otherwise, the top element of @levels records the indentation level minus 1
+	# for the next line to be processed.
+	else {
+	  $level = @levels[$#levels] + 1;
+	}
+      }
+      # If we reach this case then we have just processed the unique statement
+      # of a while, do-while, for, if or else statement,
+      # and the indentation level for the next line is retrieved from the top of @levels
+      # as a negative number that we make positive.
+      elsif ($level < 0) {
+	$level = -pop @levels;
+      }
+      $processed .= "$line";
+    }
+    s/.*/$processed\n/s;
+  }
+  $mismatch += $flag;
+}
+    

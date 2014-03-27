@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Takes a .c filename as first argument and a second argument meant to be
+# either m or empty.
+# Produces a template C source file for programs meant to span many files
+# and be compiled using customised Emacs in case the second argument is m,
+# or for programs meant to be fully contained in the file otherwise.
+
+# Written by Eric Martin for COMP9021
+
+if [ "$2" = t ] ; then
+    template='/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Description: 
+ *                                                                             *
+ * Other source files, if any, one per line, starting on the next line:        *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    return EXIT_SUCCESS;
+}
+'
+else
+    template='/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Description: 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    return EXIT_SUCCESS;
+}
+'
+fi 
+echo "$template" >"$1"

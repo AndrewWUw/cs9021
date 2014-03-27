@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+
+# Takes as arguments what is returned by the _getfilenames perl script, namely,
+# - the absolute path to a directory D that contains a .c file, say F,
+#   containing a main() function,
+# - the absolute pathname to F, and
+# - the absolute pathnames to (expectedly) all .c files that make up a program whose main()
+# function is in F, including F, where spaces have been replaced by Control B characters.
+# The filenames might have been extracted from F, but possibly from another source file.
+# Produces a Makefile for compilation of all arguments with the -std=gnu99, -Wall (all warnings)
+# and -g (for debugging purposes) options enabled.
+# The Makefile will be created in D.
+# The script recognizes the dependencies on header files that occur in the
+# ~/COMP9021/include directory and on the <math.h> header file.
+# For the first kind of header file, the script makes sure that
+# the corresponding libraries from the ~/COMP9021/lib directory
+# are passed as arguments to the linker.
+# For both kinds of header files, the script makes sure that
+# the -lm option is provided to gcc.
+
+# Written by Eric Martin for COMP9021
+
+use File::Spec;
+use File::Basename;
+
+# The directory where the Makefile will be created.
+my $main_dir = shift;
+$main_dir =~ s// /g;
+chdir $main_dir;
+my $source_files = "sources =";
+shift;
+my $priv_ldflags, $lmflag;
+foreach (@ARGV) {
+  s// /g;
+  open my $source_file, '<', "$_"
+    or die "I cannot see what is in $_, so I leave it there.\n";
+  # glob returns all filenames in ~/COMP9021/include.
+  my @header_files = glob "$ENV{HOME}/COMP9021/include/*";
+  foreach (<$source_file>) {
+    foreach my $header_file (@header_files) {
+      # Element of index 0 of array returned by fileparse() is the filename part of the pathname
+      # given as argument.
+      my @header_file_path_parts = fileparse($header_file);
+      if (m/^#include\s+<$header_file_path_parts[0]>/) {
+	$header_file_path_parts[0] =~ s/\.h$//;
+	if ($priv_ldflags !~ / -l$header_file_path_parts[0]( |$)/) {
+	  $priv_ldflags .= " -l$header_file_path_parts[0]";
+	}
+	if (!$lmflag) {
+	  $lmflag = ' -lm';
+	}
+      }
+    }
+    if (m/^#include\s+<math.h>/ && !$lmflag) {
+      $lmflag = ' -lm';
+    }
+  }
+  close $source_file;
+  # Make pathname relative to $main_dir.
+  my $source_file_relative_to_main = File::Spec->abs2rel($_);
+  # Escape spaces in pathname.
+  $source_file_relative_to_main =~ s/ /\\\ /g;
+  $source_files .= " $source_file_relative_to_main";
+}
+open my $makefile, '>', Makefile
+  or die "I cannot create a Makefile, so I leave it there.\n";
+print $makefile "# Makefile produced by _mmakefile\n\n";
+print $makefile "CC = gcc\n";
+if ($priv_ldflags) {
+  $ldflags .= ' -L$(HOME)/COMP9021/lib' . "$priv_ldflags";
+  $cflags .= ' -I$(HOME)/COMP9021/include';
+}
+$ldflags .= "$lmflag";
+print $makefile "LDFLAGS =$ldflags\n";
+print $makefile "CFLAGS = -std=gnu99 -Wall -ggdb$cflags\n\n";
+print $makefile "$source_files\n\n";
+print $makefile 'a.out : $(sources)';
+print $makefile "\n\t";
+print $makefile	'$(CC) $(CFLAGS) $(LDFLAGS) $(sources)';
+print $makefile "\n";
