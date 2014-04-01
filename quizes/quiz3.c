@@ -21,11 +21,10 @@
 double convertCharToFloat(int flag, char characters[]);
 
 int main(void) {
-	printf(
-			"Enter a floating point number in base 3 represented as a dot\n"
-					"- preceded by between 1 and 20 digits equal to 0, 1 or 2,\n"
-					"the first of which is not 0 and is possibly preceded by + or -, and\n"
-					"- followed by between 0 and 10 digits equal to 0, 1 or 2:\n");
+	printf(	"Enter a floating point number in base 3 represented as a dot\n"
+		"- preceded by between 1 and 20 digits equal to 0, 1 or 2,\n"
+		"the first of which is not 0 and is possibly preceded by + or -, and\n"
+		"- followed by between 0 and 10 digits equal to 0, 1 or 2:\n");
 	char characters[MAX_SIZE];
 	int length = 0;
 	int c;
@@ -47,35 +46,26 @@ int main(void) {
 		number = convertCharToFloat(0, characters);
 	}
 
-	printf("The number that has been input is approximately equal to %f\n",
-			number);
+	printf("The number that has been input is approximately equal to %f\n",	number);
 	printf("In base 2, this number is approximately equal to %c1.", sign);
 
-	int integer = (long) number;
-	double decimal = number - integer;
-
-	int counter = 0;
-	int integerPart[25535];
-	do {
-		integerPart[counter] = integer / 2;
-		integer = integer % 2;
-		counter++;
-	} while (integer != 0);
-	int result[counter + 10];
-	for (int i = 0; i < counter; i++) {
-		result[i] = integerPart[i];
+	double temp = 0;
+        
+	number = fabs(number);
+	for (int i = 0; i < MAX_SIZE; i++) {
+		if (number / pow(2, i) < 2 && number / pow(2, i) >= 1) {
+			exponent = i;
+			temp = number / pow(2, i) - 1;
+		}
 	}
+	for (int i = 0; i < 10; i++) {
+		if (temp - pow(2, 0 - i - 1) >= 0) {
+			mantissa[i] = 1;
+			temp = temp - pow(2, 0 - i - 1);
+		}
 
-	for (int i = 10; i < sizeof(result); i++) {
-		decimal = decimal * 2;
-		result[i] = (long) decimal;
 	}
-
-	for (int i = 0; i < PRECISION; i++) {
-		mantissa[i] = result[i];
-		printf("%d", mantissa[i]);
-	}
-
+        
 	for (int i = 0; i < PRECISION; ++i)
 		if (mantissa[i])
 			putchar('1');
@@ -85,6 +75,9 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
+/*******************************************************
+ * Convert input char array to double and return
+ ******************************************************/
 double convertCharToFloat(int flag, char characters[]) {
 	double number = 0;
 	int length = 0;
@@ -110,15 +103,12 @@ double convertCharToFloat(int flag, char characters[]) {
 	}
 
 	for (int i = flag; i < dot; i++) {
-		// printf("%d", dec[i]);
 		number += pow(3, dot - i - 1) * dec[i];
 	}
-	// printf(".");
 	for (int i = 0; i < length - dot - 1; i++) {
-		// printf("%d", fra[i]);
 		number += pow(3, -i - 1) * fra[i];
 	}
-	// printf("\n");
 	return number;
 }
+
 
