@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 double convertCharToFloat(int flag, char characters[]);
-int converFloatToBin(double number);
+
 int main(void) {
 	printf(
 			"Enter a floating point number in base 3 represented as a dot\n"
@@ -47,11 +47,35 @@ int main(void) {
 		number = convertCharToFloat(0, characters);
 	}
 
-	// printf("in put is %f\n", number);
-
 	printf("The number that has been input is approximately equal to %f\n",
 			number);
 	printf("In base 2, this number is approximately equal to %c1.", sign);
+
+	int integer = (long) number;
+	double decimal = number - integer;
+
+	int counter = 0;
+	int integerPart[25535];
+	do {
+		integerPart[counter] = integer / 2;
+		integer = integer % 2;
+		counter++;
+	} while (integer != 0);
+	int result[counter + 10];
+	for (int i = 0; i < counter; i++) {
+		result[i] = integerPart[i];
+	}
+
+	for (int i = 10; i < sizeof(result); i++) {
+		decimal = decimal * 2;
+		result[i] = (long) decimal;
+	}
+
+	for (int i = 0; i < PRECISION; i++) {
+		mantissa[i] = result[i];
+		printf("%d", mantissa[i]);
+	}
+
 	for (int i = 0; i < PRECISION; ++i)
 		if (mantissa[i])
 			putchar('1');
@@ -96,19 +120,5 @@ double convertCharToFloat(int flag, char characters[]) {
 	}
 	// printf("\n");
 	return number;
-}
-
-int converFloatToBin(double number) {
-	int mantissa[PRECISION] = { 0 };
-	int mod = 0;
-	int div = 0;
-	int counter = 0;
-
-
-	do {
-		div = number / 2;
-//		mod =
-	} while (mod != 0);
-
 }
 
