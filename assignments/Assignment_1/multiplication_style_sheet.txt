@@ -1,0 +1,18 @@
+FIXED CONSTRAINTS (CANNOT BE CHANGED).
+	
+Only blanks after a curly brace that opens a block
+Only blanks before a curly brace that closes a block
+Only blanks, while or possibly else after a curly brace that closes a block
+All semicolons at end of line, excluding the semicolons in heads of for loops
+Semicolon alone on line iff ends an empty statement
+Bodies of while, do, for, if and else not on same line as keyword (even if empty)
+Cases in switch statements sitting alone on their line
+
+VARIABLE CONSTRAINTS (CAN BE CHANGED)
+
+Maximum level of indentation								 4
+Number of spaces for indentation (may vary between 3 and 5)				 4
+Opening curly braces on same line as function name to open function body		 yes
+Opening curly braces on same line as while, do, for, if, else or switch to open block	 yes
+If directly following else is on same line as else     	  	      	    		 yes
+Else following closing brace of body of if statement is on same line as brace		 no
