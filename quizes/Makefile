@@ -4,7 +4,7 @@ CC = gcc
 LDFLAGS =
 CFLAGS = -std=gnu99 -Wall -ggdb
 
-sources = quiz_4.c
+sources = quiz5.c
 
 a.out : $(sources)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(sources)
