@@ -20,7 +20,7 @@
 
 double convertCharToFloat(int flag, char characters[]);
 
-int main(void) {
+int amain(void) {
 	printf(	"Enter a floating point number in base 3 represented as a dot\n"
 		"- preceded by between 1 and 20 digits equal to 0, 1 or 2,\n"
 		"the first of which is not 0 and is possibly preceded by + or -, and\n"

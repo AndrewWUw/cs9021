@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-int main(void) {
+int smain(void) {
     int largest_digit = 0;
     char beginning_of_word[8];
     int minimal_length = 0;
