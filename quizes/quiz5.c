@@ -14,24 +14,100 @@
 #define LEFT -1
 #define RIGHT 1
 
+//bool grid[DIM][DIM];
+
+//bool grid[DIM][DIM] = {
+//        {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+//        {0, 1, 0, 1, 0, 1, 0, 0, 1, 0},
+//        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+//        {1, 0, 0, 0, 0, 1, 0, 1, 1, 0},
+//        {0, 1, 0, 0, 0, 0, 0, 1, 0, 0},
+//        {0, 1, 0, 1, 0, 0, 0, 0, 0, 1},
+//        {0, 0, 0, 0, 1, 1, 0, 0, 1, 0},
+//        {0, 0, 1, 1, 0, 0, 1, 0, 1, 0},
+//        {0, 0, 1, 0, 0, 1, 0, 0, 0, 0},
+//        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+//        };
+//
+//bool grid[DIM][DIM] = {
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//};
+
+//bool grid[DIM][DIM] = {
+//        {0, 1, 1, 0, 1, 1, 0, 1, 0, 1},
+//        {0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+//        {0, 1, 1, 0, 1, 1, 0, 1, 1, 1},
+//        {0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
+//        {0, 0, 1, 1, 0, 0, 1, 0, 0, 0},
+//        {0, 0, 0, 0, 1, 0, 1, 1, 1, 0},
+//        {0, 0, 1, 1, 0, 0, 1, 1, 0, 1},
+//        {1, 1, 0, 0, 1, 1, 0, 0, 0, 1},
+//        {1, 1, 0, 0, 1, 0, 1, 1, 1, 1},
+//        {0, 1, 0, 1, 1, 0, 0, 1, 1, 1},
+//};
+//
+//bool grid[DIM][DIM] = {
+//                {1, 1, 1, 0, 0, 0, 0, 0, 1, 1}, {
+//                0 ,1 ,0, 0, 1, 1, 1, 1, 0, 0}, {
+//                1 ,1 ,1, 1, 0, 1, 1, 0, 0, 1}, {
+//                1 ,0 ,0, 1, 0, 1, 1, 1, 1, 1}, {
+//                1 ,0 ,1, 0, 1, 1, 0, 1, 0, 1}, {
+//                1 ,1 ,0, 0, 0, 0, 0, 0, 0, 1}, {
+//                0 ,0 ,1, 0, 1, 1, 1, 0, 0, 1}, {
+//                0 ,1 ,1, 1, 1, 0, 1, 0, 1, 1}, {
+//                1 ,0, 1, 1, 1, 1, 1, 0, 1, 0}, {
+//                0 ,1, 1, 0, 0, 0, 0, 1, 0, 0}
+//};
+//
+//bool grid[DIM][DIM] = {
+//                {1, 1, 1, 1, 1, 1, 0, 1, 1, 1}, {
+//                0, 1, 0, 1, 0, 1, 1 ,1, 1 ,1}, {
+//                0, 1, 0, 1, 1, 0, 0 ,0, 1 ,1}, {
+//                1, 1, 1, 1, 1, 0, 1 ,1, 0 ,0}, {
+//                1, 1, 1, 0, 1, 1, 1 ,1, 0 ,1}, {
+//                1, 1, 1, 1, 1, 1, 0 ,1, 0 ,1}, {
+//                1, 1, 0, 1, 1, 1, 0 ,0, 0 ,1}, {
+//                1, 1, 1, 1, 0, 1, 1 ,0, 1 ,1}, {
+//                0, 1, 0, 1, 1, 1, 0 ,1, 0 ,0}, {
+//                0, 1, 1, 1, 0, 1, 1 ,0, 1 ,0}
+//};
+//
+//bool grid[DIM][DIM] = {
+//        {0, 0, 1, 1, 0, 1, 0, 1, 1, 1},{
+//                1, 0, 1, 0, 0, 0, 1, 0, 1, 0},{
+//                1, 1, 0, 1, 1, 0, 0, 0, 1, 1},{
+//                1, 1, 1, 0, 1, 1, 0, 1, 1, 1},{
+//                1, 1, 1, 1, 0, 0, 0, 1, 1, 1},{
+//                1, 1, 1, 1, 1, 0, 1, 1, 1, 0},{
+//                1, 0, 0, 1, 1, 1, 1, 0, 1, 0},{
+//                0, 1, 1, 1, 0, 1, 1, 0, 1, 1},{
+//                1, 0, 0, 1, 1, 0, 1, 1, 1, 1},{
+//                1, 1, 1, 0, 0, 1, 1, 1, 1, 1}
+//};
+//
 bool grid[DIM][DIM] = {
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 
 void display_grid(void);
 int size_of_largest_parallelogram(void);
-/* If j1 < j2 and the grid has a 1 at the intersection of row i and column j
- * for all j in {j1, ..., j2}, then returns the side of the largest parallelogram
- * having this row of 1s as top side, and with vertical sides going down in 1 of 3 possible
- * directions as selected by dir. */
 int size_of_largest_parallelogram_with_given_top_side(int i, int j1, int j2, int dir);
 int find_longest_one(int i, int j);
 int find_largest_size_in_one_position(int i, int j, int length);
@@ -63,7 +139,6 @@ int main(int argc, char **argv) {
 //            for (int j = 0; j < DIM; ++j)
 //                grid[i][j] = rand() % nb_of_possible_outcomes == 0;
 //    }
-
     puts("Here is the grid that has been generated:\n");
     display_grid();
 
@@ -90,23 +165,25 @@ int size_of_largest_parallelogram(void) {
     for (int i = 0; i < DIM; i++) {
         int size = 0;
         for (int j = 0; j < DIM; j++) {
-            // for every position that grid[i][j] == 1
-            // find the longest length of 1s,
+            // for every position that grid[i][j] == 1, find the longest length of '1's,
             // then try to find the largest size in this position
-        	// in the last, save the largest size in this line to sizeArray[i]
-        	int length = 0;
-        	int sizeInLine = 0;
+            // in the last, save the largest size in this line to sizeArray[i]
+            int length = 0;
             if (grid[i][j] == 1) {
-            	int temp = 0;
-            	length = find_longest_one(i, j);
-				temp = find_largest_size_in_one_position(i, j, length);
-				if(temp > sizeInLine) {
-					sizeInLine = temp;
-				}
-            	j += length;
+                int temp = 0;
+                length = find_longest_one(i, j) - 1;
+                temp = find_largest_size_in_one_position(i, j, length);
+                if (temp > size) {
+                    size = temp;
+                }
+                j += length;
             } else {
                 length = 0;
             }
+        }
+        // a parallelogram can't have the size of 1/2/3
+        if (size < 4) {
+            size = 0;
         }
         sizeArray[i] = size;
     }
@@ -120,56 +197,65 @@ int size_of_largest_parallelogram(void) {
     return size;
 }
 
+/*******************************************************************************************
+ * If j1 < j2 and the grid has a 1 at the intersection of row i and column j
+ * for all j in {j1, ..., j2}, then returns the side of the largest parallelogram
+ * having this row of 1s as top side, and with vertical sides going down in 1 of 3 possible
+ * directions as selected by dir.
+ */
 int size_of_largest_parallelogram_with_given_top_side(int i1, int j1, int j2, int dir) {
 
     int size = j2 - j1 + 1;
-//	for (int j = j1; j <= j2; ++j) {
-//		if (grid[i1][j] != 1) {
-//			return 0;
-//		}
-//	}
-
-	switch (dir) {
-	case STRAIGHT:
-        if (i1 < DIM -1) {
+    for (int j = j1; j <= j2; ++j) {
+        if (grid[i1][j] != 1) {
+            return 0;
+        }
+    }
+    switch (dir) {
+    case STRAIGHT:
+        if (i1 < DIM - 1) {
             size = size + size_of_largest_parallelogram_with_given_top_side(i1 + 1, j1, j2, STRAIGHT);
         }
-		break;
-	case LEFT:
+        break;
+    case LEFT:
         if (i1 < DIM - 1 && j1 > 0) {
             size = size + size_of_largest_parallelogram_with_given_top_side(i1 + 1, j1 - 1, j2 - 1, LEFT);
         }
-		break;
-	case RIGHT:
-        if (i1 < DIM - 1 && j2 < 9) {
+        break;
+    case RIGHT:
+        if (i1 < DIM - 1 && j2 < DIM - 1) {
             size = size + size_of_largest_parallelogram_with_given_top_side(i1 + 1, j1 + 1, j2 + 1, RIGHT);
         }
-		break;
-	}
+        break;
+    }
     return size;
-
 }
 
 int find_longest_one(int i, int j) {
-	int length = 1;
-	for (int k = j; k < DIM; k++) {
-		if (grid[i][k] == 1) {
-			length++;
-		} else
-			break;
-	}
-	return length;
+    int length = 0;
+    for (int k = j; k < DIM; k++) {
+        if (grid[i][k] == 1) {
+            length++;
+        } else
+            break;
+    }
+    return length;
 }
 
 int find_largest_size_in_one_position(int i, int j, int length) {
-	int size = 0;
-
-    size = size_of_largest_parallelogram_with_given_top_side(i, j, j + length, STRAIGHT);
-    if (size < size_of_largest_parallelogram_with_given_top_side(i, j, j + length, LEFT)) {
-        size = size_of_largest_parallelogram_with_given_top_side(i, j, j + length, LEFT);
-    } else if (size < size_of_largest_parallelogram_with_given_top_side(i, j, j + length, RIGHT)) {
-        size = size_of_largest_parallelogram_with_given_top_side(i, j, j + length, RIGHT);
+    int size = 0;
+    for (int k = j; k <= j + length; k++) {
+        int temp = 0;
+        temp = size_of_largest_parallelogram_with_given_top_side(i, j, k,STRAIGHT);
+        if (size  < size_of_largest_parallelogram_with_given_top_side(i, j, k, LEFT)) {
+            temp = size_of_largest_parallelogram_with_given_top_side(i, j, k, LEFT);
+        }
+        if (size < size_of_largest_parallelogram_with_given_top_side(i, j, k, RIGHT)) {
+            temp = size_of_largest_parallelogram_with_given_top_side(i, j, k, RIGHT);
+        }
+        if (temp > size) {
+            size = temp;
+        }
     }
-
     return size;
 }
