@@ -14,7 +14,7 @@
 #define LEFT -1
 #define RIGHT 1
 
-//bool grid[DIM][DIM];
+bool grid[DIM][DIM];
 
 //bool grid[DIM][DIM] = {
 //        {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
@@ -41,7 +41,7 @@
 //        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 //        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 //};
-
+//
 //bool grid[DIM][DIM] = {
 //        {0, 1, 1, 0, 1, 1, 0, 1, 0, 1},
 //        {0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
@@ -94,17 +94,17 @@
 //                1, 1, 1, 0, 0, 1, 1, 1, 1, 1}
 //};
 //
-bool grid[DIM][DIM] = {
-        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+//bool grid[DIM][DIM] = {
+//        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+//        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 
 void display_grid(void);
 int size_of_largest_parallelogram(void);
@@ -114,31 +114,31 @@ int find_largest_size_in_one_position(int i, int j, int length);
 
 int main(int argc, char **argv) {
     /* We run the program with two command line arguments. */
-//    if (argc != 3) {
-//        printf("Please provide 2 command line arguments.\n");
-//        return EXIT_FAILURE;
-//    }
-//    /* The first one will determine our probability distribution;
-//     * it is meant to be nonzero. */
-//    int nb_of_possible_outcomes = strtol(argv[1], NULL, 10); // convert string to long int
-//    if (!nb_of_possible_outcomes) {
-//        printf("The first command line argument should not be 0.\n");
-//        return EXIT_FAILURE;
-//    }
-//    /* We use the second command line argument, meant to be a nonnegative integer,
-//     * as a seed for the random number generator. */
-//    srand(strtoul(argv[2], NULL, 10));
-//    /* We fill the grid with randomly generated 0s and 1s,
-//     * with for every cell, a probability of 1/nb_of_possible_outcomes to generate a 0. */
-//    if (nb_of_possible_outcomes > 0)
-//        for (int i = 0; i < DIM; ++i)
-//            for (int j = 0; j < DIM; ++j)
-//                grid[i][j] = rand() % nb_of_possible_outcomes > 0;
-//    else {
-//        for (int i = 0; i < DIM; ++i)
-//            for (int j = 0; j < DIM; ++j)
-//                grid[i][j] = rand() % nb_of_possible_outcomes == 0;
-//    }
+    if (argc != 3) {
+        printf("Please provide 2 command line arguments.\n");
+        return EXIT_FAILURE;
+    }
+    /* The first one will determine our probability distribution;
+     * it is meant to be nonzero. */
+    int nb_of_possible_outcomes = strtol(argv[1], NULL, 10); // convert string to long int
+    if (!nb_of_possible_outcomes) {
+        printf("The first command line argument should not be 0.\n");
+        return EXIT_FAILURE;
+    }
+    /* We use the second command line argument, meant to be a nonnegative integer,
+     * as a seed for the random number generator. */
+    srand(strtoul(argv[2], NULL, 10));
+    /* We fill the grid with randomly generated 0s and 1s,
+     * with for every cell, a probability of 1/nb_of_possible_outcomes to generate a 0. */
+    if (nb_of_possible_outcomes > 0)
+        for (int i = 0; i < DIM; ++i)
+            for (int j = 0; j < DIM; ++j)
+                grid[i][j] = rand() % nb_of_possible_outcomes > 0;
+    else {
+        for (int i = 0; i < DIM; ++i)
+            for (int j = 0; j < DIM; ++j)
+                grid[i][j] = rand() % nb_of_possible_outcomes == 0;
+    }
     puts("Here is the grid that has been generated:\n");
     display_grid();
 
