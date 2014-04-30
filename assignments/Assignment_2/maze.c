@@ -83,33 +83,60 @@
 
 #define MAX_X_DIM 31
 #define MAX_Y_DIM 41
-
+#define maze[MAX_Y_DIM][MAX_X_DIM];
 /* Possibly include extra macros */
 
 /* Include your global variables */
 
-bool get_input(void);
+bool get_input(char *argv[]);
 /* Include your function prototypes */
 
 int main(int argc, char **argv) {
-    if (argc > 2 || argc == 2 && strcmp(argv[1], "print")) {
-        printf("I expect no command line argument or \"print\" as unique command line argument.\n");
-        return EXIT_FAILURE;
-    }
-    if (!get_input()) {
-        printf("Incorrect input.\n");
-        return EXIT_FAILURE;
-    }
-    /* Insert your code */
-    if (argc == 2) {
-        /* Insert your code for the case a.out is run with print as command line argument */
-        return EXIT_SUCCESS;
-    }
-    /* Insert your code for the case a.out is run with no command line argument */
+	printf("%d\n", argc > 2 || argc == 2 && strcmp(argv[1], "prints"));
+
+   	if (argc > 2 || (argc == 2 && strcmp(argv[1], "print"))) {
+		printf(
+				"I expect no command line argument or \"print\" as unique command line argument.\n");
+		return EXIT_FAILURE;
+	}
+//	get_input(argv);
+	if (!get_input(argv)) {
+		printf("Incorrect input.\n");
+		return EXIT_FAILURE;
+	}
+	/* Insert your code */
+	if (argc == 2) {
+		/* Insert your code for the case a.out is run with print as command line argument */
+
+		return EXIT_SUCCESS;
+	}
+
+	/* Insert your code for the case a.out is run with no command line argument */
+	return EXIT_SUCCESS;
 }
 
 /* Implement this function */
-bool get_input(void) {
+bool get_input(char *argv[]) {
+	printf("%s\n", argv[1]);
+
+	if (sizeof argv == 2) {
+		printf("2 args\n");
+	} else {
+		printf("1 arg\n");
+	}
+
+//	char ch;
+//	FILE *fp;
+//	int i;
+//	if ((fp = fopen(argv[1], "r")) == NULL)
+//	{
+//		printf("not open");
+//		exit(0);
+//	}
+//	while ((ch = fgetc(fp)) != EOF)
+//		putchar(ch);
+//	fclose(fp);
+	return false;
 }
 
 /* Insert code for the definition of your own functions */
