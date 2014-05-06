@@ -14,56 +14,99 @@
 #include <string.h>
 #include <stdbool.h>
 
+void cleanData(char *data);
+void sort(int argc, char **argv, int offset);
+void swap(char *, char *);
+bool isEven(int pos);
+void moveElement(int argc, char **argv, int offset);
+void outPutArgs(int argc, char **argv);
+
 void process_command_line_arguments(char **argv, int argc) {
-	char *temp;
 
 	for (int i = 1; i < argc; i++) {
-		temp = *&argv[i];
-		cleanData(*&argv[i], sizeof(*&argv[i]));
-		for (int j = i; j < argc; j++) {
-//			if (isEven(i)) {
-//				if (i != 0) {
-//
-//				}
-//			}
-//		arg
+		cleanData(*&argv[i]);
+		if (!isEven(i) && i > 1) {
+				moveElement(argc, argv, i);
 		}
-//		printf("%d \n", (*temp) - '0');
+
 	}
 
+//	if (isEven(argc)) {
+//		for (int i = (argc - 2); i > 1; i -= 2) {
+//			sort(argc, argv, i);
+//		}
+//	} else {
+//		for (int i = (argc - 3); i > 1; i -= 2) {
+//			sort(argc, argv, i);
+//		}
+//
+//	}
+}
+
+void moveElement(int argc, char **argv, int offset) {
+	for (int i = offset; i < argc; i++) {
+		swap(*&argv[i], *&argv[i - 1]);
+	}
+	outPutArgs(argc, argv);
 }
 
 void swap(char *arr1, char *arr2) {
+	char temp;
+	temp = *arr1;
+	*arr1 = *arr2;
+	*arr2 = temp;
+}
+
+void sort(int argc, char **argv, int offset) {
 	char *temp;
-	temp = arr1;
-	arr1 = arr2;
-	arr2 = temp;
+	while (offset < argc - 1) {
+		temp = *(argv + offset);
+		*(argv + offset) = *(argv + offset + 1);
+		*(argv + offset + 1) = temp;
+//		swap(*(argv + offset), *(argv + offset + 1));
+		offset++;
+	}
 }
 
 bool isEven(int pos) {
 	return (pos % 2 == 0) ? true : false;
 }
 
-void cleanData(char *data, int size) {
-	int count;
-	char temp[size];
-	for (int i = 0; i < size; i++) {
-		if (isdigit(data[i])) {
+void cleanData(char *data) {
+	int count = 0;
+	int size = 0;
+
+	while (data[size++] != '\0') {
+		if (isdigit(data[size - 1])) {
 			count++;
 		}
-		temp[i] = &data[i];
-		printf("%d\n", temp[i] - '0');
 	}
+	size--;
 
-	char newArr[count];
+	char temp[count];
+	int pos = 0;
 	for (int i = size - 1; i >= 0; i--) {
-		int pos = 0;
-		if (isdigit(temp[i])) {
-//			newArr[pos] = data[i];
-			data[pos] = temp[i];
+		if (isdigit(data[i])) {
+			temp[pos] = data[i];
 			pos++;
 		}
 	}
-//	return *newArr;
+	for (int i = 0; i < count; i++) {
+		data[i] = temp[i];
+	}
+	data[count] = '\0';
+
+	count = 0;
+	size = 0;
+	while (data[size++] != '\0') {
+		if (isdigit(data[size - 1])) {
+			count++;
+		}
+	}
 }
 
+void outPutArgs(int argc, char **argv) {
+	for (int i = 1; i < argc; i++)
+		printf("%s  ", argv[i]);
+	printf("\n");
+}
