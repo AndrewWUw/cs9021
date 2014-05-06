@@ -29,24 +29,15 @@ int main(void) {
                 break;
             }
         if (is_prime) {
-            /* First prime in tentative sequence of 6, or
-             * new prime at correct distance */
             if (count == 0 || gap == count) {
                 ++count;                
                 gap = 1;
-            }
-            /* New prime too close to previous one,
-             * this prime will have to start new sequence */
-            else
+            } else
                 count = gap = 1;
             if (count == 6)
                 printf("    %d   %d   %d   %d   %d   %d\n",
                        i - 30, i - 28, i - 24, i - 18, i - 10, i);
-        }
-        /* If in the process of validating a sequence (because count != 0),
-         * increases gap by 1 and checks that distance from last prime
-         * is not too large---otherwise, next prime will start new sequence */
-        else if (count && ++gap > count)
+        } else if (count && ++gap > count)
             count = gap = 0;
     }
     return EXIT_SUCCESS;

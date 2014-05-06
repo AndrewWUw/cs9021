@@ -65,6 +65,3 @@ int nb_of_consecutive_squares(int n) {
         return 2;
     return 3;
 }
-
-    
-    

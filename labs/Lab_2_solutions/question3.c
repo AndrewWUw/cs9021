@@ -30,5 +30,3 @@ int main(void) {
     printf("is %d.", divisor);
     return EXIT_SUCCESS;
 }
-
-

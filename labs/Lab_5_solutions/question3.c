@@ -50,12 +50,13 @@ bool process_data(void) {
     /* offset is the number of spaces before the #s
      * that make up the left border of the grid. */
     int offset = 0;
-    while (isspace(c = getchar()))
+    while (isspace(c = getchar())) {
         /* Go over all blank lines that precede the top border of the grid. */
         if (c == '\n')
             offset = 0;
         else
             ++offset;
+    }
     if (c == '#') {
         /* Check that the top border of the grid is correct, ... */
         for (int j = 0; j <= DIM; ++j)
