@@ -83,109 +83,34 @@
 
 #define MAX_X_DIM 31
 #define MAX_Y_DIM 41
+
 /* Possibly include extra macros */
 
 /* Include your global variables */
-char maze[MAX_Y_DIM][MAX_X_DIM];
-int gateCounter = 0;
-int wallCounter = 0;
-int areaCounter = 0;
 
-/* Include your function prototypes */
 bool get_input(void);
-bool checkMaze(int x_dim, int y_dim);
+/* Include your function prototypes */
 
 int main(int argc, char **argv) {
-
-//	printf("%d\n", argc == 2 && strcmp(argv[1], "print"));
-//	printf("argc=%d, argv[1]=%s\n", argc, argv[1]);
-
-//	if (argc > 2 || (argc == 2 && strcmp(argv[1], "print"))) {
-//		printf(
-//				"I expect no command line argument or \"print\" as unique command line argument.\n");
-//		return EXIT_FAILURE;
-//	}
-	if (!get_input()) {
-		printf("Incorrect input.\n");
-		return EXIT_FAILURE;
-	}
-
-	/* Insert your code */
-
-//	printf("The maze has %d gate.\n");
-//	printf("The maze has %d wall.\n");
-//	printf("The maze has %d area.\n");
-	if (argc == 2) {
-		/* Insert your code for the case a.out is run with print as command line argument */
-
-		return EXIT_SUCCESS;
-	}
-
-	/* Insert your code for the case a.out is run with no command line argument */
-	return EXIT_SUCCESS;
+    if (argc > 2 || argc == 2 && strcmp(argv[1], "print")) {
+        printf("I expect no command line argument or \"print\" as unique command line argument.\n");
+        return EXIT_FAILURE;
+    }
+    if (!get_input()) {
+        printf("Incorrect input.\n");
+        return EXIT_FAILURE;
+    }
+    /* Insert your code */
+    if (argc == 2) {
+        /* Insert your code for the case a.out is run with print as command line argument */
+        return EXIT_SUCCESS;
+    }
+    /* Insert your code for the case a.out is run with no command line argument */
 }
 
 /* Implement this function */
-bool get_input() {
-	bool isCorrectInput = true;
-	char c;
-	int x_dim = 0;
-	int y_dim = 0;
-
-	while ((c = getchar()) != EOF) {
-		if (isspace(c) || (c >= '0' && c <= '3') || c == '\n') {
-			switch (c) {
-			case ' ':
-				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-				if (x_dim > 31) {
-					isCorrectInput = false;
-				} else {
-					maze[y_dim][x_dim++] = c;
-				}
-				break;
-			case '\n':
-				if (y_dim > 41) {
-					isCorrectInput = false;
-				} else if (x_dim != 0) {
-					x_dim = 0;
-					y_dim++;
-				}
-				break;
-			}
-		} else {
-			isCorrectInput = false;
-			break;
-		}
-	}
-
-	x_dim = 0;
-	for (int i = 0; i < MAX_X_DIM; i++) {
-		if (isdigit(maze[0][i]))
-			x_dim++;
-	}
-
-	isCorrectInput = checkMaze(x_dim - 1, y_dim);
-
-	return isCorrectInput;
+bool get_input(void) {
 }
 
-bool checkMaze(int x_dim, int y_dim) {
-	bool isCorrectMaze = true;
+/* Insert code for the definition of your own functions */
 
-	for (int i = 0; i < y_dim; i++) {
-		if (maze[i][x_dim] == '1' || maze[i][x_dim] == '3') {
-			isCorrectMaze = false;
-		}
-	}
-
-	for (int j = 0; j < x_dim; j++) {
-		if (maze[y_dim][j] == '2' || maze[y_dim][j] == '3') {
-			isCorrectMaze = false;
-		}
-	}
-	return isCorrectMaze;
-}
