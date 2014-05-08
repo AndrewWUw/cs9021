@@ -87,13 +87,20 @@
 
 /* Include your global variables */
 char maze[MAX_Y_DIM][MAX_X_DIM];
+
+// counters for different output
 int gateCounter = 0;
 int wallCounter = 0;
-int areaCounter = 0;
+int inAccAreaCounter = 0;
+int accAreaCounter = 0;
+int culdesacsCounter = 0;
+int pathCounter = 0;
 
 /* Include your function prototypes */
 bool get_input(void);
 bool checkMaze(int x_dim, int y_dim);
+void printMaze();
+void outputResult();
 
 int main(int argc, char **argv) {
 
@@ -105,94 +112,206 @@ int main(int argc, char **argv) {
 //				"I expect no command line argument or \"print\" as unique command line argument.\n");
 //		return EXIT_FAILURE;
 //	}
-	bool t = get_input();
-	printf("%d\n", t);
-//	if (!get_input()) {
-//		printf("Incorrect input.\n");
-//		return EXIT_FAILURE;
-//	}
-
-	/* Insert your code */
-
-//	printf("The maze has %d gate.\n");
-//	printf("The maze has %d wall.\n");
-//	printf("The maze has %d area.\n");
-	if (argc == 2) {
-		/* Insert your code for the case a.out is run with print as command line argument */
-
-		return EXIT_SUCCESS;
+//    bool t = get_input();
+//    printf("%d\n", t);
+	if (!get_input()) {
+		printf("Incorrect input.\n");
+		return EXIT_FAILURE;
 	}
 
-	/* Insert your code for the case a.out is run with no command line argument */
-	return EXIT_SUCCESS;
+    /* Insert your code */
+
+	outputResult();
+
+    if (argc == 2) {
+        /* Insert your code for the case a.out is run with print as command line argument */
+
+        return EXIT_SUCCESS;
+    }
+
+    /* Insert your code for the case a.out is run with no command line argument */
+    return EXIT_SUCCESS;
 }
 
-/* Implement this function */
 bool get_input() {
-	bool isCorrectInput = true;
-	char c;
-	int x_dim = 0;
-	int y_dim = 0;
+    bool isCorrectInput = true;
+    char c;
+    int x_dim = 0;
+    int y_dim = 0;
 
-	while ((c = getchar()) != EOF) {
-		if (isspace(c) || (c >= '0' && c <= '3') || c == '\n') {
-			switch (c) {
-			case ' ':
-				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-				if (x_dim > 31) {
-					isCorrectInput = false;
-				} else {
-					maze[y_dim][x_dim++] = c;
-				}
-				break;
-			case '\n':
-				if (y_dim > 41) {
-					isCorrectInput = false;
-				} else if (x_dim != 0 && x_dim >= 2) {
-					x_dim = 0;
-					y_dim++;
-				} else if(x_dim < 2){
-					isCorrectInput = false;
-				}
-				break;
-			}
-		} else {
-			isCorrectInput = false;
-			break;
-		}
-	}
+    while ((c = getchar()) != EOF) {
+        if (isspace(c) || (c >= '0' && c <= '3') || c == '\n') {
+            switch (c) {
+            case ' ':
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+                if (x_dim > 31) {
+                    isCorrectInput = false;
+                } else {
+                    maze[y_dim][x_dim++] = c;
+                }
+                break;
+            case '\n':
+                if (x_dim != 0 && x_dim >= 2) {
+                    x_dim = 0;
+                    y_dim++;
+                } else if (y_dim > 41 || x_dim == 1) {
+                    isCorrectInput = false;
+                }
+                break;
+            }
+        } else {
+            isCorrectInput = false;
+            break;
+        }
+    }
 
-	x_dim = 0;
-	for (int i = 0; i < MAX_X_DIM; i++) {
-		if (isdigit(maze[0][i]))
-			x_dim++;
-	}
+    if (isCorrectInput) {
+        x_dim = 0;
+        for (int i = 0; i < MAX_X_DIM; i++) {
+            if (isdigit(maze[0][i]))
+                x_dim++;
+        }
+        isCorrectInput = checkMaze(x_dim, y_dim);
+    }
 
-	isCorrectInput = checkMaze(x_dim - 1, y_dim);
-
-	return isCorrectInput;
+    return isCorrectInput;
 }
 
 /*
  * check if the maze satisfied boundary restrictions
  */
 bool checkMaze(int x_dim, int y_dim) {
-	bool isCorrectMaze = true;
+    bool isCorrectMaze = true;
 
-	for (int i = 0; i < y_dim; i++) {
-		if (maze[i][x_dim] == '1' || maze[i][x_dim] == '3') {
-			isCorrectMaze = false;
-		}
-	}
+    for (int i = 0; i < y_dim; i++) {
+        if (maze[i][x_dim] == '1' || maze[i][x_dim] == '3') {
+            isCorrectMaze = false;
+        }
+    }
 
-	for (int j = 0; j < x_dim; j++) {
-		if (maze[y_dim][j] == '2' || maze[y_dim][j] == '3') {
-			isCorrectMaze = false;
-		}
-	}
-	return isCorrectMaze;
+    for (int j = 0; j < x_dim; j++) {
+        if (maze[y_dim][j] == '2' || maze[y_dim][j] == '3') {
+            isCorrectMaze = false;
+        }
+    }
+
+//    for (int i = 0; i < y_dim; i++) {
+//        for (int j = 0; j < x_dim; ++j) {
+//            printf("%d ", maze[i][j] - '0');
+//        }
+//        printf("\n");
+//    }
+    return isCorrectMaze;
 }
+
+void printMaze() {
+}
+
+void drawMaze() {
+
+    printf("\\documentclass[10pt]{article}\n");
+    printf("\\usepackage{tikz}\n");
+    printf("\\usetikzlibrary{shapes.misc}\n");
+    printf("\\usepackage[margin=0cm]{geometry}\n");
+    printf("\\pagestyle{empty}\n");
+    printf("\\tikzstyle{every node}=[cross out, draw, red]\n");
+    printf("\n");
+    printf("\\begin{document}\n");
+    printf("\n");
+    printf("\\vspace*{\\fill}\n");
+    printf("\\begin{center}\n");
+    printf("\\begin{tikzpicture}[x=0.5cm, y=-0.5cm, ultra thick, blue]\n");
+    printf("% Walls\n");
+    printf("");
+
+}
+
+/*
+ * If no argument is given, output result directly.
+ */
+void outputResult() {
+    switch (gateCounter) {
+    case 0:
+        printf("The maze has no gate.\n");
+        break;
+    case 1:
+        printf("The maze has a single gate.\n");
+        break;
+    default:
+        printf("The maze has %d gates.\n", gateCounter);
+        break;
+    }
+
+    switch (wallCounter) {
+    case 0:
+        printf("The maze has no wall.\n");
+        break;
+    case 1:
+        printf("The maze has walls that are all connected.\n");
+        break;
+    default:
+        printf("The maze has %d sets of walls that are all connected.\n",
+                wallCounter);
+        break;
+    }
+
+    switch (inAccAreaCounter) {
+    case 0:
+        printf("The maze has no inaccessible inner point.\n");
+        break;
+    case 1:
+        printf("The maze has a unique inaccessible inner point.\n");
+        break;
+    default:
+        printf("The maze has %d inaccessible inner points.\n",
+                inAccAreaCounter);
+        break;
+    }
+
+    switch (accAreaCounter) {
+    case 0:
+        printf("The maze has no accessible area.\n");
+        break;
+    case 1:
+        printf("The maze has a unique accessible area.\n");
+        break;
+    default:
+        printf("The maze has %d accessible areas.\n", accAreaCounter);
+        break;
+    }
+
+    switch (culdesacsCounter) {
+    case 0:
+        printf("The maze has no accessible cul-de-sac.\n");
+        break;
+    case 1:
+        printf("The maze has accessible cul-de-sacs that are all connected.\n");
+        break;
+    default:
+        printf(
+                "The maze has %d sets of accessible cul-de-sacs that are all connected.\n",
+                culdesacsCounter);
+        break;
+    }
+
+    switch (pathCounter) {
+    case 0:
+        printf(
+                "The maze has no entry-exit path with no intersection not to cul-de-sacs.\n");
+        break;
+    case 1:
+        printf(
+                "The maze has a unique entry-exit path with no intersection not to cul-de-sacs.\n");
+       break;
+    default:
+        printf(
+                "The maze has %d entry-exit paths with no intersections not to cul-de-sacs.\n",
+                pathCounter);
+        break;
+    }
+}
+
