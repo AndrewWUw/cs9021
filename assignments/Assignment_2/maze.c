@@ -105,10 +105,12 @@ int main(int argc, char **argv) {
 //				"I expect no command line argument or \"print\" as unique command line argument.\n");
 //		return EXIT_FAILURE;
 //	}
-	if (!get_input()) {
-		printf("Incorrect input.\n");
-		return EXIT_FAILURE;
-	}
+	bool t = get_input();
+	printf("%d\n", t);
+//	if (!get_input()) {
+//		printf("Incorrect input.\n");
+//		return EXIT_FAILURE;
+//	}
 
 	/* Insert your code */
 
@@ -150,9 +152,11 @@ bool get_input() {
 			case '\n':
 				if (y_dim > 41) {
 					isCorrectInput = false;
-				} else if (x_dim != 0) {
+				} else if (x_dim != 0 && x_dim >= 2) {
 					x_dim = 0;
 					y_dim++;
+				} else if(x_dim < 2){
+					isCorrectInput = false;
 				}
 				break;
 			}
@@ -173,6 +177,9 @@ bool get_input() {
 	return isCorrectInput;
 }
 
+/*
+ * check if the maze satisfied boundary restrictions
+ */
 bool checkMaze(int x_dim, int y_dim) {
 	bool isCorrectMaze = true;
 

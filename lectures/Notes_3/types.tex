@@ -1,0 +1,49 @@
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{tikz}
+\usepackage{rotating} 
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{sidewaysfigure*}
+\begin{center}
+\begin{tikzpicture}
+\node {}  [sibling distance=6.0cm]
+    child {node {void} edge from parent[draw=none]}
+    child {node {function} edge from parent[draw=none]}
+    child {node {object} edge from parent[draw=none, sibling distance=6.0cm]
+        child {node {scalar}
+            child {node {arithmetic}
+                child {node {integral} [sibling distance=3.0cm]
+                    child {node {enumerated}}
+                    child {node {integer} [sibling distance=2.0cm]
+                        child {node {signed}}
+                        child {node {unsigned}}
+                        child {node {boolean}}
+                        child {node {character} [sibling distance=2.0cm]
+                            child {node {signed}}
+                            child {node {unsigned}}
+                            child {node {plain}}
+                        }
+                    }
+                }
+                child {node {floating-point} [sibling distance=2.0cm]
+                    child {node {real}}
+                    child {node {complex}}
+                }
+            }
+            child {node {pointer}}
+        }
+        child {node {aggregate} [sibling distance=2.0cm]
+            child {node {array}}
+            child {node {structure}}
+        }
+        child {node {union}}
+    };
+\end{tikzpicture}
+\end{center}
+\end{sidewaysfigure*}
+
+\end{document} 
