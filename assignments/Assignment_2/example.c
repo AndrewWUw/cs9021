@@ -150,13 +150,11 @@ int main(int argc, char **argv) {
     for (int j = 0; j < MAX_Y_DIM - 1; j++)
         for (int i = 0; i < MAX_X_DIM - 1; i++)
             path_recorder[j][i] = 0;
-    /* the loops get the connectability information on the maze
-     and store them into the status[][][]. status[][][] is a
-     3-level array,whose format is 4 digits [0][0][0][0] means
-     this point isn't connected with any neigbour, [1][0][0][0]
-     means it is connected with the point locates up of it,
-     [0][1][0][1] means it is connected the points locates up
-     and left of it...*/
+    /* the loops get the connectability information on the maze and store them into the status[][][].
+     * status[][][] is a 3-level array, whose format is 4 digits
+     * [0][0][0][0] means this point isn't connected with any neighbour,
+     * [1][0][0][0] means it is connected with the point locates up of it,
+     * [0][1][0][1] means it is connected the points locates up and left of it...*/
     for (int j = 0; j < y_count; j++) {
         for (int i = 0; i < x_count; i++) {
             switch (martix[j][i]) {

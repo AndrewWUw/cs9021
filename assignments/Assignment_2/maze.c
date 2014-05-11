@@ -89,6 +89,9 @@
 char maze[MAX_Y_DIM][MAX_X_DIM];
 int actual_x_dim = 0;
 int actual_y_dim = 0;
+bool dummyMaze[MAX_Y_DIM][MAX_X_DIM];
+bool mazeInXDim[MAX_Y_DIM][MAX_X_DIM];
+bool mazeInYDim[MAX_Y_DIM][MAX_X_DIM];
 
 // counters for different output
 int gateCounter = 0;
@@ -117,37 +120,36 @@ void drawMaze();
 /* helper functions */
 void copyMaze(char *);
 void printMaze();
+void wallCounterHelper(int i, int j);
+void convertMaze();
+int findLongestlength(int i, int j, int direction);
 
 int main(int argc, char **argv) {
-
-//	printf("%d\n", argc == 2 && strcmp(argv[1], "print"));
-//	printf("argc=%d, argv[1]=%s\n", argc, argv[1]);
 
 //	if (argc > 2 || (argc == 2 && strcmp(argv[1], "print"))) {
 //		printf(
 //				"I expect no command line argument or \"print\" as unique command line argument.\n");
 //		return EXIT_FAILURE;
 //	}
-//    bool t = get_input();
-//    printf("%d\n", t);
     if (!get_input()) {
         printf("Incorrect input.\n");
         return EXIT_FAILURE;
     }
-
-//    printMaze();
-//    countGates();
-    countWalls();
-
-    outputResult();
+    convertMaze();
+    drawMaze();
 
     if (argc == 2) {
-        /* Insert your code for the case a.out is run with print as command line argument */
-
+        printMaze();
         return EXIT_SUCCESS;
     }
 
-    /* Insert your code for the case a.out is run with no command line argument */
+    //    printMaze();
+    //    countGates();
+    //    countWalls();
+
+    //    countInAccAreas();
+    outputResult();
+
     return EXIT_SUCCESS;
 }
 
@@ -260,97 +262,49 @@ void countGates() {
 }
 
 void countWalls() {
-    char dummyMaze[actual_y_dim][actual_x_dim];
-    int counter;
-
     for (int i = 0; i < actual_y_dim; i++) {
         for (int j = 0; j < actual_x_dim; ++j) {
-            dummyMaze[i][j] = maze[i][j];
+            dummyMaze[i][j] = false;
         }
     }
 
     for (int i = 0; i < actual_y_dim; i++) {
         for (int j = 0; j < actual_x_dim; ++j) {
-            switch (dummyMaze[j][i]) {
-            case '0':
-                wallCounter++;
-                break;
-            case '1':
-//                if (dummyMaze[i - 1][j] == '2' || dummyMaze[i - 1][j] == '3') {
-//                    dummyMaze[i - 1][j] = wallCounter;
-//                } else if (dummyMaze[i - 1][j] == '0'
-//                        || dummyMaze[i - 1][j] == '1') {
-//                    dummyMaze[i - 1][j] = ++wallCounter;
-//                }
-
-                if (dummyMaze[i + 1][j] == '2') {
-                    dummyMaze[i + 1][j] = wallCounter;
-                } else if (dummyMaze[i + 1][j] == '0'
-                        || dummyMaze[i + 1][j] == '1'
-                        || dummyMaze[i + 1][j] == '3') {
-                    dummyMaze[i][j] = ++wallCounter;
-                }
-
-//                if (dummyMaze[i][j - 1] == '1' || dummyMaze[i][j - 1] == '2'
-//                        || dummyMaze[i][j - 1] == '3') {
-//                    dummyMaze[i][j - 1] = wallCounter;
-//                } else if (dummyMaze[i][j - 1] == 0) {
-//                    dummyMaze[i][j - 1] = ++wallCounter;
-//                }
-
-                if (dummyMaze[i][j + 1] == '1' || dummyMaze[i][j + 1] == '2'
-                        || dummyMaze[i][j + 1] == '3') {
-                    dummyMaze[i][j + 1] = wallCounter;
-                } else if (dummyMaze[i][j + 1] == '0') {
-                    dummyMaze[i][j] = ++wallCounter;
-                }
-                break;
-            case '2':
-//                if (dummyMaze[i - 1][j] == '2' || dummyMaze[i - 1][j] == '3') {
-//                    dummyMaze[i - 1][j] = wallCounter;
-//                } else if (dummyMaze[i - 1][j] == '0'
-//                        || dummyMaze[i - 1][j] == '1') {
-//                    dummyMaze[i - 1][j] = ++wallCounter;
-//                }
-                if (dummyMaze[i + 1][j] == '1' || dummyMaze[i + 1][j] == '2'
-                        || dummyMaze[i + 1][j] == '3') {
-                    dummyMaze[i][j] = wallCounter;
-                } else if (dummyMaze[i + 1][j] == '0') {
-                    dummyMaze[i][j] = ++wallCounter;
-                }
-
-                if () {
-
-                } else if () {
-
-                }
-
-                break;
-            case '3':
-                if () {
-
-                } else if () {
-
-                }
-
-                if (dummyMaze[]) {
-
-                } else if () {
-
-                }
-                break;
+            if (dummyMaze[i][j] == false) {
+                wallCounterHelper(i, j);
+                if (maze[i][j] != '0')
+                    wallCounter++;
             }
         }
     }
-
-    for (int i = 0; i < actual_y_dim; i++) {
-        for (int j = 0; j < actual_x_dim; ++j) {
-            printf("%d ", dummyMaze[i][j] - '0');
-        }
-        printf("\n");
-    }
-
 }
+
+void wallCounterHelper(int i, int j) {
+    if (dummyMaze[i][j] == false) {
+        dummyMaze[i][j] = true;
+        switch (maze[i][j]) {
+        case '1':
+            if (j + 1 < actual_x_dim)
+                wallCounterHelper(i, j + 1);
+            break;
+        case '2':
+            wallCounterHelper(i + 1, j);
+            break;
+        case '3':
+            wallCounterHelper(i, j + 1);
+            wallCounterHelper(i + 1, j);
+            break;
+        default:
+            break;
+        }
+
+        if ((maze[i - 1][j] == '2' || maze[i - 1][j] == '3') && (i - 1 >= 0))
+            wallCounterHelper(i - 1, j);
+        if ((maze[i][j - 1] == '1' || maze[i][j - 1] == '3') && (j - 1 >= 0))
+            wallCounterHelper(i, j - 1);
+    }
+}
+
 void countInAccAreas() {
 
 }
@@ -379,8 +333,45 @@ void drawMaze() {
     printf("\\begin{center}\n");
     printf("\\begin{tikzpicture}[x=0.5cm, y=-0.5cm, ultra thick, blue]\n");
     printf("% Walls\n");
-    printf("");
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (mazeInXDim[i][j] == true)
+                printf("    \\draw (%d,%d) -- ", i, j);
+            int l = findLongestlength(i, j, 0);
+            printf("(%d,%d)\n", l, j);
+        }
+    }
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (mazeInYDim[i][j] == true)
+                printf("    \\draw (%d,%d) -- ", i, j);
+            int l = findLongestlength(i, j, 1);
+            printf("(%d,%d)", i, l);
+        }
+    }
 
+    printf("% Pillars\n");
+    printf("% Inner points in accessible cul-de-sacs\n");
+    printf("% Entry-exit paths without intersections\n");
+    printf("\\end{tikzpicture}\n");
+    printf("\\end{center}\n");
+    printf("\\vspace*{\\fill}\n");
+    printf("\n");
+    printf("\\end{document}\n");
+}
+
+int findLongestlength(int i, int j, int direction) {
+    int length = 1;
+
+    switch (direction) {
+    case 0:
+        length += findLongestlength(i, j + 1, 0);
+        break;
+    case 1:
+        length += findLongestlength(i + 1, j, 1);
+        break;
+    }
+    return length;
 }
 
 /*
@@ -470,6 +461,44 @@ void outputResult() {
 
 /*===================Helper Functions============================= */
 
+void convertMaze() {
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            switch (maze[i][j]) {
+            case '1':
+                mazeInXDim[i][j] = true;
+                break;
+            case '2':
+                mazeInYDim[i][j] = true;
+                break;
+            case '3':
+                mazeInXDim[i][j] = true;
+                mazeInYDim[i][j] = true;
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            printf("%d  ", mazeInXDim[i][j]);
+        }
+        printf("\n");
+        for (int j = 0; j < actual_x_dim; j++) {
+            printf("%d  ", mazeInYDim[i][j]);
+        }
+        printf("\n");
+    }
+
+//    printf("\n");
+//    for (int i = 0; i < actual_y_dim; i++) {
+//        for (int j = 0; j < actual_x_dim; j++) {
+//            printf("%d  ", mazeInYDim[i][j]);
+//        }
+//        printf("\n");
+//    }
+}
+
 void copyMaze(char *newMaze) {
     for (int i = 0; i < actual_y_dim; i++) {
         for (int j = 0; j < actual_x_dim; ++j) {
@@ -490,3 +519,4 @@ void printMaze() {
         printf("\n");
     }
 }
+
