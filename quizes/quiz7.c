@@ -17,7 +17,7 @@
 
 void process_command_line_arguments(char **, int);
 
-int main(int argc, char **argv) {
+int smain(int argc, char **argv) {
     process_command_line_arguments(argv, argc);
 	for (int i = 1; i < argc; ++i)
 		printf("  %s", argv[i]);

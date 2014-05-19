@@ -92,6 +92,9 @@ int actual_y_dim = 0;
 bool dummyMaze[MAX_Y_DIM][MAX_X_DIM];
 bool mazeInXDim[MAX_Y_DIM][MAX_X_DIM];
 bool mazeInYDim[MAX_Y_DIM][MAX_X_DIM];
+bool tempMaze[MAX_Y_DIM][MAX_X_DIM];
+bool mazeInXDimDummy[MAX_Y_DIM][MAX_X_DIM];
+bool mazeInYDimDummy[MAX_Y_DIM][MAX_X_DIM];
 
 // counters for different output
 int gateCounter = 0;
@@ -116,38 +119,41 @@ void countPaths();
 /* Output functions */
 void outputResult();
 void drawMaze();
+void drawWalls();
+void drawPillars();
+void drawInnerPoints();
 
 /* helper functions */
-void copyMaze(char *);
 void printMaze();
 void wallCounterHelper(int i, int j);
+void countCuldHelper(int i, int j);
 void convertMaze();
 int findLongestlength(int i, int j, int direction);
+void drawInnerPointsHelper();
 
 int main(int argc, char **argv) {
 
-//	if (argc > 2 || (argc == 2 && strcmp(argv[1], "print"))) {
-//		printf(
-//				"I expect no command line argument or \"print\" as unique command line argument.\n");
-//		return EXIT_FAILURE;
-//	}
+    if (argc > 2 || (argc == 2 && strcmp(argv[1], "print"))) {
+        printf(
+                "I expect no command line argument or \"print\" as unique command line argument.\n");
+        return EXIT_FAILURE;
+    }
     if (!get_input()) {
         printf("Incorrect input.\n");
         return EXIT_FAILURE;
     }
     convertMaze();
-    drawMaze();
-
     if (argc == 2) {
-        printMaze();
+        drawMaze();
         return EXIT_SUCCESS;
     }
 
-    //    printMaze();
-    //    countGates();
-    //    countWalls();
-
-    //    countInAccAreas();
+    countGates();
+    countWalls();
+    countInAccAreas();
+    countAccAreas();
+    countCuldesacs();
+    countPaths();
     outputResult();
 
     return EXIT_SUCCESS;
@@ -238,15 +244,12 @@ void countGates() {
             gateCounter++;
     }
 
-    printf("gate=%d\n", gateCounter);
     for (int i = 1; i < actual_y_dim - 1; i++) {
         if (maze[i][0] == '0' || maze[i][0] == '1')
             gateCounter++;
         if (maze[i][actual_x_dim - 1] == '0')
             gateCounter++;
     }
-
-    printf("gate=%d\n", gateCounter);
 
     if (maze[0][actual_x_dim - 1] == '0' && maze[1][actual_x_dim - 1] != '2')
         gateCounter++;
@@ -257,8 +260,6 @@ void countGates() {
         gateCounter++;
     if (maze[0][0] == '0')
         gateCounter++;
-
-    printf("gate=%d\n", gateCounter);
 }
 
 void countWalls() {
@@ -307,16 +308,84 @@ void wallCounterHelper(int i, int j) {
 
 void countInAccAreas() {
 
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (mazeInXDim[i][j] == true)
+                inAccAreasCounterHelper(i, j);
+        }
+    }
+
 }
+
+void inAccAreasCounterHelper(int i, int j) {
+    if (mazeInXDim[i][j] == true) {
+        if (mazeInYDim[i][j] == true) {
+            inAccAreasCounterHelper(i, j + 1);
+            inAccAreasCounterHelper(i + 1, j);
+        } else {
+            inAccAreasCounterHelper(i, j + 1);
+            inAccAreasCounterHelper(i + 1, j);
+            inAccAreasCounterHelper(i, j - 1);
+        }
+    }
+}
+
 void countAccAreas() {
 
 }
 void countCuldesacs() {
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            tempMaze[i][j] = false;
+            mazeInXDimDummy[i][j] = mazeInXDim[i][j];
+            mazeInYDimDummy[i][j] = mazeInYDim[i][j];
+        }
+    }
 
+    int counter = 0;
+    int currentCounter = 0;
+    do {
+        counter = currentCounter;
+        currentCounter = 0;
+        drawInnerPointsHelper();
+
+        for (int i = 0; i < actual_y_dim; i++) {
+            for (int j = 0; j < actual_x_dim; j++) {
+                if (tempMaze[i][j] == true)
+                    currentCounter++;
+            }
+        }
+    } while (counter != currentCounter);
+
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (tempMaze[i][j] == true) {
+                countCuldHelper(i, j);
+                culdesacsCounter++;
+            }
+        }
+    }
 }
+
+void countCuldHelper(int i, int j) {
+    if (tempMaze[i][j] == true)
+        tempMaze[i][j] = false;
+
+    if (tempMaze[i - 1][j] == true)
+        countCuldHelper(i - 1, j);
+    if (tempMaze[i + 1][j] == true)
+        countCuldHelper(i + 1, j);
+    if (tempMaze[i][j - 1] == true)
+        countCuldHelper(i, j - 1);
+    if (tempMaze[i][j + 1] == true)
+        countCuldHelper(i, j + 1);
+}
+
 void countPaths() {
 
 }
+
+/* ========================================================================== */
 
 void drawMaze() {
 
@@ -333,26 +402,16 @@ void drawMaze() {
     printf("\\begin{center}\n");
     printf("\\begin{tikzpicture}[x=0.5cm, y=-0.5cm, ultra thick, blue]\n");
     printf("% Walls\n");
-    for (int i = 0; i < actual_y_dim; i++) {
-        for (int j = 0; j < actual_x_dim; j++) {
-            if (mazeInXDim[i][j] == true)
-                printf("    \\draw (%d,%d) -- ", i, j);
-            int l = findLongestlength(i, j, 0);
-            printf("(%d,%d)\n", l, j);
-        }
-    }
-    for (int i = 0; i < actual_y_dim; i++) {
-        for (int j = 0; j < actual_x_dim; j++) {
-            if (mazeInYDim[i][j] == true)
-                printf("    \\draw (%d,%d) -- ", i, j);
-            int l = findLongestlength(i, j, 1);
-            printf("(%d,%d)", i, l);
-        }
-    }
+    drawWalls();
 
     printf("% Pillars\n");
+    drawPillars();
+
     printf("% Inner points in accessible cul-de-sacs\n");
+    drawInnerPoints();
+
     printf("% Entry-exit paths without intersections\n");
+
     printf("\\end{tikzpicture}\n");
     printf("\\end{center}\n");
     printf("\\vspace*{\\fill}\n");
@@ -360,15 +419,110 @@ void drawMaze() {
     printf("\\end{document}\n");
 }
 
+void drawWalls() {
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (mazeInXDim[i][j] == true) {
+                printf("    \\draw (%d,%d) -- ", j, i);
+                int l = findLongestlength(i, j, 0);
+                printf("(%d,%d);\n", j + l, i);
+                j = j + l;
+            }
+        }
+    }
+    for (int j = 0; j < actual_x_dim; j++) {
+        for (int i = 0; i < actual_y_dim; i++) {
+            if (mazeInYDim[i][j] == true) {
+                printf("    \\draw (%d,%d) -- ", j, i);
+                int l = findLongestlength(i, j, 1);
+                printf("(%d,%d);\n", j, i + l);
+                i = i + l;
+            }
+        }
+    }
+}
+
+void drawPillars() {
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (mazeInXDim[i][j - 1] == false && mazeInXDim[i][j] == false
+                    && mazeInYDim[i - 1][j] == false
+                    && mazeInYDim[i][j] == false) {
+                printf("    \\fill[green] (%d,%d) circle(0.2);\n", j, i);
+            }
+        }
+
+    }
+}
+
+void drawInnerPoints() {
+
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            tempMaze[i][j] = false;
+            mazeInXDimDummy[i][j] = mazeInXDim[i][j];
+            mazeInYDimDummy[i][j] = mazeInYDim[i][j];
+        }
+    }
+
+    int counter = 0;
+    int currentCounter = 0;
+    do {
+        counter = currentCounter;
+        currentCounter = 0;
+        drawInnerPointsHelper();
+
+        for (int i = 0; i < actual_y_dim; i++) {
+            for (int j = 0; j < actual_x_dim; j++) {
+                if (tempMaze[i][j] == true)
+                    currentCounter++;
+            }
+        }
+    } while (counter != currentCounter);
+
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            if (tempMaze[i][j] == true)
+                printf("    \\node at (%d.5,%d.5) {};\n", j, i);
+        }
+    }
+}
+
+void drawInnerPointsHelper() {
+    for (int i = 0; i < actual_y_dim; i++) {
+        for (int j = 0; j < actual_x_dim; j++) {
+            int counter = 0;
+            if (mazeInXDimDummy[i][j] == true)
+                counter++;
+            if (mazeInXDimDummy[i + 1][j] == true)
+                counter++;
+            if (mazeInYDimDummy[i][j] == true)
+                counter++;
+            if (mazeInYDimDummy[i][j + 1] == true)
+                counter++;
+
+            if (counter == 3) {
+                tempMaze[i][j] = true;
+                mazeInXDimDummy[i][j] = true;
+                mazeInXDimDummy[i + 1][j] = true;
+                mazeInYDimDummy[i][j] = true;
+                mazeInYDimDummy[i][j + 1] = true;
+            }
+        }
+    }
+}
+
 int findLongestlength(int i, int j, int direction) {
     int length = 1;
 
     switch (direction) {
     case 0:
-        length += findLongestlength(i, j + 1, 0);
+        if (j + 1 < actual_x_dim && mazeInXDim[i][j + 1] == true)
+            length += findLongestlength(i, j + 1, 0);
         break;
     case 1:
-        length += findLongestlength(i + 1, j, 1);
+        if (i + 1 < actual_y_dim && mazeInYDim[i + 1][j] == true)
+            length += findLongestlength(i + 1, j, 1);
         break;
     }
     return length;
@@ -478,37 +632,9 @@ void convertMaze() {
             }
         }
     }
-
-    for (int i = 0; i < actual_y_dim; i++) {
-        for (int j = 0; j < actual_x_dim; j++) {
-            printf("%d  ", mazeInXDim[i][j]);
-        }
-        printf("\n");
-        for (int j = 0; j < actual_x_dim; j++) {
-            printf("%d  ", mazeInYDim[i][j]);
-        }
-        printf("\n");
-    }
-
-//    printf("\n");
-//    for (int i = 0; i < actual_y_dim; i++) {
-//        for (int j = 0; j < actual_x_dim; j++) {
-//            printf("%d  ", mazeInYDim[i][j]);
-//        }
-//        printf("\n");
-//    }
-}
-
-void copyMaze(char *newMaze) {
-    for (int i = 0; i < actual_y_dim; i++) {
-        for (int j = 0; j < actual_x_dim; ++j) {
-            *(newMaze + i + j) = maze[i][j];
-        }
-    }
 }
 
 void printMaze() {
-
     printf("actual_x_dim = %d\n", actual_x_dim);
     printf("actual_y_dim = %d\n", actual_y_dim);
 

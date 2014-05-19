@@ -54,7 +54,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="q2.c|quiz6.c|quiz5_sol.c|quiz4_sol.c|quiz3_sol.c|quiz2_sol.c|quiz1_sol.c|quiz6 (1).c|quiz5.c|quiz5_1.c|quiz4.c|quiz3.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="my_code.c|quiz7.c|q2.c|quiz6.c|quiz5_sol.c|quiz4_sol.c|quiz3_sol.c|quiz2_sol.c|quiz1_sol.c|quiz6 (1).c|quiz5.c|quiz5_1.c|quiz4.c|quiz3.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -101,7 +101,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="q2.c|quiz6.c|quiz5_sol.c|quiz4_sol.c|quiz3_sol.c|quiz2_sol.c|quiz1_sol.c|quiz6 (1).c|quiz5.c|quiz5_1.c|quiz4.c|quiz3.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="my_code.c|quiz7.c|q2.c|quiz6.c|quiz5_sol.c|quiz4_sol.c|quiz3_sol.c|quiz2_sol.c|quiz1_sol.c|quiz6 (1).c|quiz5.c|quiz5_1.c|quiz4.c|quiz3.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
