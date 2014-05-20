@@ -19,36 +19,43 @@
 #include "tailored_list.h"
 #include "modify_list.h"
 
-void print_list(const Node *const);
+void print_list(const Node * const);
 void print_node(const int);
 int compare(const void *, const void *);
 
 int main(int argc, char **argv) {
     if (argc < 3) {
-        printf("Provide a nonnegative number N followed by at least N + 1 characters\n"
-               "        as command-line arguments.\n");
+        printf(
+                "Provide a nonnegative number N followed by at least N + 1 characters\n"
+                        "        as command-line arguments.\n");
         return EXIT_FAILURE;
     }
+
     const int length = argc - 2;
     int starting_point = strtol(argv[1], NULL, 10);
     if (starting_point < 0) {
         printf("First argument should not be negative.\n");
         return EXIT_FAILURE;
     }
+
     if (length < starting_point + 1) {
         printf("Not enough characters.\n");
         return EXIT_FAILURE;
     }
+
     Node *list = NULL;
     for (int i = 2; i < argc; ++i)
         append_to_list(argv[i][0], &list);
+
     Node *nodes_before[length];
     Node *pt_to_node = list;
     for (int i = 0; i < length; ++i) {
         nodes_before[i] = pt_to_node;
         pt_to_node = pt_to_node->pt_to_next_node;
     }
+
     modify_list(&list, starting_point);
+
     print_list(list);
     Node *nodes_after[length];
     pt_to_node = list;
@@ -59,14 +66,14 @@ int main(int argc, char **argv) {
     qsort(nodes_before, length, sizeof(Node *), compare);
     qsort(nodes_after, length, sizeof(Node *), compare);
     for (int i = 0; i < length; ++i)
-       if (nodes_before[i] != nodes_after[i]) {
-           printf("You cheated! Failed test.\n");
-           break;
-       }
+        if (nodes_before[i] != nodes_after[i]) {
+            printf("You cheated! Failed test.\n");
+            break;
+        }
     return EXIT_SUCCESS;
 }
 
-void print_list(const Node *const pt_to_node) {
+void print_list(const Node * const pt_to_node) {
     if (!pt_to_node)
         printf("()\n");
     else {
@@ -81,5 +88,5 @@ void print_node(const int value) {
 }
 
 int compare(const void *a, const void *b) {
-     return ((Node *)b)->value - ((Node *)a)->value;
+    return ((Node *) b)->value - ((Node *) a)->value;
 }
