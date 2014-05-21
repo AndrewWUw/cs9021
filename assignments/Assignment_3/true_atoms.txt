@@ -1,0 +1,4 @@
+  temperature_is_now_above_25
+
+taller_than(paul,peter)      rich(paul)
+     rich(fido) rich(peter)

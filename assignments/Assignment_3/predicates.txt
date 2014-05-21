@@ -1,0 +1,3 @@
+taller_than/2
+
+   temperature_is_now_above_25/0     rich/1
