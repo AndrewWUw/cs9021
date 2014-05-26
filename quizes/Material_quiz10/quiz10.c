@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
     Stack stack;
     initialise_stack(&stack);
     store_command_line_args_in_stack(argc, argv, &stack);
+
     if (!is_correct_prefix_expression(&stack) || !is_empty_stack(&stack)) {
         printf("Not a correct prefix expression.\n");
         return EXIT_SUCCESS;
