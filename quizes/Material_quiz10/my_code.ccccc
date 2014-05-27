@@ -17,68 +17,49 @@
 
 void store_command_line_args_in_stack(int argc, char **argv,
         Stack * const pt_to_stack) {
-
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
         push(argv[i][0], pt_to_stack);
-    }
+    return;
 }
 
 bool is_correct_prefix_expression(Stack * const pt_to_stack) {
-
-    int height = stack_height(pt_to_stack);
-    Value items[height];
-    int operatorSum = 0;
-    int digitSum = 0;
-
-    for (int i = height - 1; i >= 0; --i) {
-        pop(pt_to_stack, &items[i]);
-        if (isdigit(items[i])) {
-            ++digitSum;
-        } else if (items[i] == '+') {
-            ++operatorSum;
+    int n = stack_height(pt_to_stack);
+    char expression;
+    int nb_of_value = 0;
+    for (int i = n - 1; i >= 0; --i) {
+        expression = pt_to_stack->pt_to_bottom[i];
+        if (isdigit(expression))
+            nb_of_value++;
+        else if (expression == '+') {
+            if (nb_of_value < 2)
+                return false;
+            else
+                nb_of_value--;
         }
     }
-
-    if (!isdigit(
-            items[height - 1]) || (operatorSum + 1 != digitSum)|| ! isdigit(items[height - 2])) {
-        return false;
-    } else if (height == 1) {
-        if (isdigit(items[0]))
-            return true;
-        else
-            return false;
-    } else {
+    if (nb_of_value == 1)
         return true;
-    }
+    return false;
 }
 
 Value evaluate_expression(Stack * const pt_to_stack) {
-    Stack stack;
-    initialise_stack(&stack);
-    int height = stack_height(pt_to_stack);
-    Value value_1, value_2, value;
-    Value items[height];
-
-    for (int i = 0; i < height; ++i) {
-        pop(pt_to_stack, &items[i]);
-    }
-
-    for (int i = 0; i < height; ++i) {
-        printf("%c ", items[i]);
-    }
-    printf("\n");
-
-    for (int i = 0; i < height; ++i) {
-        if (items[i] == '+') {
-            pop(&stack, &value_1);
-            pop(&stack, &value_2);
-            push(value_1 + value_2, &stack);
-        } else {
-            push(items[i] - '0', &stack);
+    int n = stack_height(pt_to_stack);
+    Value value_1;
+    Value value_2;
+    char expression;
+    Stack digits_stack;
+    initialise_stack(&digits_stack);
+    for (int i = 0; i < n; ++i)
+        if (isdigit(pt_to_stack->pt_to_bottom[i]))
+            push(pt_to_stack->pt_to_bottom[i] - '0', &digits_stack);
+    for (int i = n - 1; i >= 0; --i) {
+        if (pt_to_stack->pt_to_bottom[i] == '+') {
+            pop(&digits_stack, &value_1);
+            pop(&digits_stack, &value_2);
+            push((value_1) + (value_2), &digits_stack);
         }
     }
-
-    pop(&stack, &value);
-    empty_stack(&stack);
-    return value;
+    pop(&digits_stack, &value_1);
+    empty_stack(&digits_stack);
+    return value_1;
 }
