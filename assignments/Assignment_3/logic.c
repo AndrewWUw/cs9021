@@ -37,6 +37,7 @@ Formula parse_formula(char ** buf);
 int is_C_identifiers(char c);
 char * match(char * buf, char * partner);
 char * passspace(char * buf);
+void check_relation_opts(char ** buf, Formula* ret);
 
 int get_File_Contents(FILE *file, char *file_buf[]) {
     char *buf = malloc(sizeof(char) * MAXSIZE);
@@ -69,7 +70,6 @@ int get_File_Contents(FILE *file, char *file_buf[]) {
 
 void get_constants(FILE *file) {
     name_size = get_File_Contents(file, name);
-
 }
 
 void get_predicates(FILE * file) {
@@ -89,24 +89,45 @@ Formula make_formula() {
 //    fgets(buf, MAXSIZE, stdin);
 
     int c;
-    int i = 0;
+    int i = 1;
+
+    while (isspace(c = getchar()) || c == '\n')
+        continue;
+
+    buf[0] = c;
     while ((c = getchar()) != EOF) {
+        if (isspace(c)) {
+            if (buf[i - 1] == ' ' || buf[i - 1] == '[')
+                continue;
+        } else if (isspace(c)) {
+            continue;
+        } else if (c == ']' && buf[i - 1] == ' ') {
+            buf[i - 1] = c;
+            continue;
+        }
+
         if (c == '\n')
             c = ' ';
         buf[i] = c;
         ++i;
     }
-    buf[strlen(buf) - 1] = '\0';
 
-//    printf("\n");
-//    for(int i = 0; i < strlen(buf); ++i)
-//        printf("%c", buf[i]);
-//    printf("\n");
-
-    if (findspace(buf)) {
-        if (buf[0] != '[')
-            return NULL;
+    // remove space in the end of input formula
+    int buf_size = strlen(buf) - 1;
+    for (int i = buf_size + 1; i >= 0; --i) {
+        if (isspace(buf[i]) && isspace(buf[i - 1])) {
+            --buf_size;
+        }
     }
+    if (!isspace(buf[buf_size]))
+        --buf_size;
+
+    buf[buf_size] = '\0';
+
+//    if (findspace(buf)) {
+//        if (buf[0] != '[')
+//            return NULL;
+//    }
 
     Formula ret = parse_formula(&buf);
 
@@ -122,7 +143,7 @@ bool findspace(char * buf) {
 }
 
 Formula parse_formula(char ** buf) {
-    // printf("parse_formula\n");
+// printf("parse_formula\n");
     Formula ret;
     ret = (Formula) malloc(sizeof(struct formula));
 
@@ -133,7 +154,7 @@ Formula parse_formula(char ** buf) {
         *buf = match(*buf, "[");
 
         *buf = passspace(*buf);
-        // printf("%s\n", *buf);
+// printf("%s\n", *buf);
 
         ret->subf1 = (Formula) malloc(sizeof(struct formula));
         ret->predicate_name = malloc(sizeof(char) * MAXSIZE);
@@ -141,7 +162,7 @@ Formula parse_formula(char ** buf) {
         ret->name_size = 0;
 
         ret->subf1 = parse_formula(buf);
-        // printf("ret->first->predicate_name %s\n", ret->first->predicate_name);
+// printf("ret->first->predicate_name %s\n", ret->first->predicate_name);
 
         *buf = passspace(*buf);
 
@@ -169,7 +190,7 @@ Formula parse_formula(char ** buf) {
         *buf = passspace(*buf);
         ret = parse_formula(buf);
         ret->type = NOT;
-        // printf("not %s\n", ret->predicate_name);
+// printf("not %s\n", ret->predicate_name);
     } else { // normal
         ret->type = NORMAL;
         ret->predicate_name = (char *) malloc(sizeof(char) * MAXSIZE);
@@ -184,7 +205,7 @@ Formula parse_formula(char ** buf) {
                 break;
             }
         }
-        // printf("%s\n", ret->predicate_name);
+// printf("%s\n", ret->predicate_name);
 
         ret->name_size = 0;
         int i = 0;
@@ -211,15 +232,15 @@ Formula parse_formula(char ** buf) {
         }
         *buf = passspace(*buf);
 
-        // for (i = 0; i < ret->name_size; ++i)
-        // {
-        //   printf("%s\n", ret->name[i] );
-        // }
+// for (i = 0; i < ret->name_size; ++i)
+// {
+//   printf("%s\n", ret->name[i] );
+// }
 
         ret->subf1 = NULL;
         ret->subf2 = NULL;
 
-        // printf("%s\n", ret->predicate_name);
+// printf("%s\n", ret->predicate_name);
     }
     return ret;
 }
@@ -227,19 +248,19 @@ Formula parse_formula(char ** buf) {
 void check_relation_opts(char ** buf, Formula* ret) {
 
     if (strncmp(*buf, "or", 2) == 0) {
-        // printf("or\n");
+// printf("or\n");
         (*ret)->type = OR;
         *buf = match(*buf, "or");
     } else if (strncmp(*buf, "and", 3) == 0) {
-        // printf("and\n");
+// printf("and\n");
         (*ret)->type = AND;
         *buf = match(*buf, "and");
     } else if (strncmp(*buf, "implies", 7) == 0) {
-        // printf("implies\n");
+// printf("implies\n");
         (*ret)->type = IMPLIES;
         *buf = match(*buf, "implies");
     } else if (strncmp(*buf, "iff", 3) == 0) {
-        // printf("iff\n");
+// printf("iff\n");
         (*ret)->type = IFF;
         *buf = match(*buf, "iff");
     } else {
@@ -284,7 +305,7 @@ Interpretation make_interpretation(FILE * file) {
 
     fgets(buf, MAXSIZE, file);
     while (!feof(file)) {
-        // rm '\n'
+// rm '\n'
         buf[strlen(buf) - 1] = 0;
 
         /* get the first token */
@@ -330,23 +351,23 @@ Interpretation make_interpretation(FILE * file) {
 
             ++i;
         }
-        // update predicate_name' size
+// update predicate_name' size
         predicate_size = i;
 
         fgets(buf, MAXSIZE, file);
     }
     interpretation_size = i;
-    // for(i = 0; i < interpretation_size; ++i){
-    //   printf("%s ", interpretation[i].predicate_name);
-    // }
-    // printf("\n");
+// for(i = 0; i < interpretation_size; ++i){
+//   printf("%s ", interpretation[i].predicate_name);
+// }
+// printf("\n");
 
 }
 
 int is_in_predicate_name(char *name) {
     int len;
     for (int i = 0; i < predicate_size; ++i) {
-        // printf("%s\n", predicate_name[i]);
+// printf("%s\n", predicate_name[i]);
         for (len = 0; i < strlen(predicate_name[i]); ++len) {
 
             if (predicate_name[i][len] == '/') {
@@ -429,9 +450,9 @@ bool get_value(Formula formula) {
         return is_same(formula);
         break;
     case NOT:
-        // printf("not %s\n", formula->predicate_name);
-        // printf("%s %s\n", formula->name[0], formula->name[1]);
-        // printf("%d\n", is_same(formula));
+// printf("not %s\n", formula->predicate_name);
+// printf("%s %s\n", formula->name[0], formula->name[1]);
+// printf("%d\n", is_same(formula));
         return !is_same(formula);
         break;
     case AND:
@@ -610,7 +631,7 @@ bool is_satisfiable(Formula formula) {
         if ((fp = fopen("witnesses_satisfiability.txt", "wb")) == NULL) {
             printf("can't open\n");
         }
-        // printf("%d\n", tf_tb->needtobetrue_size);
+// printf("%d\n", tf_tb->needtobetrue_size);
         for (int i = 0; i < tf_tb->needtobetrue_size; ++i) {
             fprintf(fp, "%s", tf_tb->needtobetrue[i]->predicate_name);
             if (tf_tb->needtobetrue[i]->name_size) {

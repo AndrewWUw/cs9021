@@ -28,26 +28,26 @@ int main(void) {
      fclose(file);
      printf("Input possible formula: ");     
      Formula form = make_formula();
-     if (!form || ! is_syntactically_correct(form)) {
-          printf("Possible formula is not a formula.\n");
-          return EXIT_SUCCESS;
-     }
-     printf("Possible formula is indeed a formula.\n");
-     file = fopen("true_atoms.txt", "r");
-     if (!file) {
-          printf("Could not open interpretation file. Bye!\n");
-          return EXIT_FAILURE;
-     }
-     Interpretation interp = make_interpretation(file);
-     fclose(file);
-     if (is_true(form, interp)) {
-          printf("Formula is true in given interpretation.\n");
-          return EXIT_SUCCESS;
-     }
-     printf("Formula is false in given interpretation.\n");
-     if (is_satisfiable(form))
-          printf("Formula is satisfiable.\n");
-     else
-          printf("Formula is not satisfiable.\n");
+//     if (!form || ! is_syntactically_correct(form)) {
+//          printf("Possible formula is not a formula.\n");
+//          return EXIT_SUCCESS;
+//     }
+//     printf("Possible formula is indeed a formula.\n");
+//     file = fopen("true_atoms.txt", "r");
+//     if (!file) {
+//          printf("Could not open interpretation file. Bye!\n");
+//          return EXIT_FAILURE;
+//     }
+//     Interpretation interp = make_interpretation(file);
+//     fclose(file);
+//     if (is_true(form, interp)) {
+//          printf("Formula is true in given interpretation.\n");
+//          return EXIT_SUCCESS;
+//     }
+//     printf("Formula is false in given interpretation.\n");
+//     if (is_satisfiable(form))
+//          printf("Formula is satisfiable.\n");
+//     else
+//          printf("Formula is not satisfiable.\n");
     return EXIT_SUCCESS;
 }
