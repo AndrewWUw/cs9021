@@ -2,117 +2,84 @@ Body of else statement on same line as else keyword (23).
 Other constraints will not be tested, please fix current mismatches.
 
 
-void get_constants(FILE * file) {
+int get_File_Contents(FILE *file, char *file_buf[]) {
     char *buf = malloc(sizeof(char) * MAXSIZE);
-
     char *token;
     char *delim = " ";
     int i = 0;
 
     while (!feof(file)) {
-        
+        fgets(buf, MAXSIZE, file);
+
         buf[strlen(buf) - 1] = 0;
 
-        
         token = strtok(buf, delim);
-
-        
         while (token != NULL) {
-            
-            name[i] = malloc(sizeof(char) * strlen(token));
-            strcpy(name[i], token);
-
-            
+            file_buf[i] = malloc(sizeof(char) * strlen(token));
+            strcpy(file_buf[i], token);
             token = strtok(NULL, delim);
-
-            i++;
+            ++i;
         }
-        
-        name_size = i;
-
-        fgets(buf, MAXSIZE, file);
     }
-
-    for (int j = 0; j < name_size; j++) {
-        printf("%s ", name[j]);
-    }
-    printf("\n");
-
     free(buf);
+
+
+
+
+
+
+    return i;
+}
+ 
+void get_constants(FILE *file) {
+    name_size = get_File_Contents(file, name);
+
 }
  
 void get_predicates(FILE * file) {
-    char *buf = malloc(sizeof(char) * MAXSIZE);
+    predicate_size = get_File_Contents(file, predicate_name);
 
-    char *token;
-    char *delim = " ";
-    int i = 0;
-
-    fgets(buf, MAXSIZE, file);
-    while (!feof(file)) {
-        
-        buf[strlen(buf) - 1] = 0;
-
-        
-        token = strtok(buf, delim);
-
-        
-        while (token != NULL) {
-            
-            predicate_name[i] = malloc(sizeof(char) * strlen(token));
-            strcpy(predicate_name[i], token);
-
-            
-            token = strtok(NULL, delim);
-
-            i++;
-        }
-        
-        predicate_size = i;
-
-        fgets(buf, MAXSIZE, file);
-    }
-    
-    
-    
-    
-
-    free(buf);
-    for (i = 0; i < predicate_size; i++) {
-        for (int j = 0; j < strlen(predicate_name[i]); j++) {
+    for (int i = 0; i < predicate_size; ++i) {
+        for (int j = 0; j < strlen(predicate_name[i]); ++j) {
             if (predicate_name[i][j] == '/') {
-                
                 args[i] = atoi(predicate_name[i] + j + 1);
-                
             }
         }
     }
+}
+ 
+Formula make_formula() {
+    char *buf = malloc(sizeof(char) * MAXSIZE);
+    fgets(buf, MAXSIZE, stdin);
 
-}
- 
-int is_C_identifiers(char c) {
-    if (c >= 'a' && c <= 'z') {
-        return 1;
-    } else @@  if (c >= 'A' && c <= 'Z') {
-        return 1;
-    } else @@  if (c == '_') {
-        return 1;
-    } else @@  if (c >= '0' && c <= '9') {
-        return 1;
-    } else @@  {
-        return 0;
+    buf[strlen(buf) - 1] = '\0';
+
+    if (findspace(buf)) {
+        if (buf[0] != '[')
+            return NULL;
     }
+
+
+
+
+
+
+
+
+
+
+
+    Formula ret = parse_formula(&buf);
+
+    return ret;
 }
  
-char * match(char * buf, char * partner) {
-    return buf + strlen(partner);
-}
- 
-char * passspace(char * buf) {
-    while (buf[0] == ' ') {
-        buf += 1;
-    }
-    return buf;
+bool findspace(char * buf) {
+    for (int i = 0; i < strlen(buf); ++i)
+        if (buf[i] == ' ')
+            return true;
+
+    return false;
 }
  
 Formula parse_formula(char ** buf) {
@@ -139,26 +106,9 @@ Formula parse_formula(char ** buf) {
 
         *buf = passspace(*buf);
 
-        if (strncmp(*buf, "or", 2) == 0) {
-            
-            ret->type = OR;
-            *buf = match(*buf, "or");
-        } else @@  if (strncmp(*buf, "and", 3) == 0) {
-            
-            ret->type = AND;
-            *buf = match(*buf, "and");
-        } else @@  if (strncmp(*buf, "implies", 7) == 0) {
-            
-            ret->type = IMPLIES;
-            *buf = match(*buf, "implies");
-        } else @@  if (strncmp(*buf, "iff", 3) == 0) {
-            
-            ret->type = IFF;
-            *buf = match(*buf, "iff");
-        } else @@  {
-            ret = NULL;
+        check_relation_opts(buf, &ret);
+        if (ret == NULL)
             return ret;
-        }
 
         *buf = passspace(*buf);
 
@@ -213,7 +163,7 @@ Formula parse_formula(char ** buf) {
                 } else @@  {
                     ret->name[ret->name_size][i] = (*buf)[0];
                     
-                    i++;
+                    ++i;
                     *buf = *buf + 1;
                 }
             }
@@ -235,28 +185,53 @@ Formula parse_formula(char ** buf) {
     return ret;
 }
  
-bool findspace(char * buf) {
-    for (int i = 0; i < strlen(buf); ++i)
-        if (buf[i] == ' ')
-            return true;
+void check_relation_opts(char ** buf, Formula* ret) {
 
-    return false;
-}
- 
-Formula make_formula() {
-    char *buf = malloc(sizeof(char) * MAXSIZE);
-    fgets(buf, MAXSIZE, stdin);
-
-    buf[strlen(buf) - 1] = '\0';
-
-    if (findspace(buf)) {
-        if (buf[0] != '[')
-            return NULL;
+    if (strncmp(*buf, "or", 2) == 0) {
+        
+        (*ret)->type = OR;
+        *buf = match(*buf, "or");
+    } else @@  if (strncmp(*buf, "and", 3) == 0) {
+        
+        (*ret)->type = AND;
+        *buf = match(*buf, "and");
+    } else @@  if (strncmp(*buf, "implies", 7) == 0) {
+        
+        (*ret)->type = IMPLIES;
+        *buf = match(*buf, "implies");
+    } else @@  if (strncmp(*buf, "iff", 3) == 0) {
+        
+        (*ret)->type = IFF;
+        *buf = match(*buf, "iff");
+    } else @@  {
+        ret = NULL;
     }
 
-    Formula ret = parse_formula(&buf);
-
-    return ret;
+}
+ 
+int is_C_identifiers(char c) {
+    if (c >= 'a' && c <= 'z') {
+        return 1;
+    } else @@  if (c >= 'A' && c <= 'Z') {
+        return 1;
+    } else @@  if (c == '_') {
+        return 1;
+    } else @@  if (c >= '0' && c <= '9') {
+        return 1;
+    } else @@  {
+        return 0;
+    }
+}
+ 
+char * match(char * buf, char * partner) {
+    return buf + strlen(partner);
+}
+ 
+char * passspace(char * buf) {
+    while (buf[0] == ' ') {
+        buf += 1;
+    }
+    return buf;
 }
  
 Interpretation make_interpretation(FILE * file) {
@@ -289,12 +264,12 @@ Interpretation make_interpretation(FILE * file) {
             interpretation[i].name_size = 0;
             
             if (token[j] == '(') {
-                j++;
+                ++j;
                 interpretation[i].name[interpretation[i].name_size] =
                         (char *) malloc(sizeof(char) * MAXSIZE);
                 while (token[j] != ')') {
                     if (token[j] == ',') {
-                        j++;
+                        ++j;
                         
                         interpretation[i].name_size++;
                         interpretation[i].name[interpretation[i].name_size] =
@@ -303,18 +278,18 @@ Interpretation make_interpretation(FILE * file) {
                     } else @@  {
                         interpretation[i].name[interpretation[i].name_size][k] =
                                 token[j];
-                        k++;
-                        j++;
+                        ++k;
+                        ++j;
                     }
                 }
                 interpretation[i].name_size++;
-                j++;
+                ++j;
             }
 
             
             token = strtok(NULL, delim);
 
-            i++;
+            ++i;
         }
         
         predicate_size = i;
@@ -331,7 +306,7 @@ Interpretation make_interpretation(FILE * file) {
  
 int is_in_predicate_name(char *name) {
     int len;
-    for (int i = 0; i < predicate_size; i++) {
+    for (int i = 0; i < predicate_size; ++i) {
         
         for (len = 0; i < strlen(predicate_name[i]); ++len) {
 
@@ -387,14 +362,14 @@ bool is_syntactically_correct(Formula formula) {
  
 bool is_same(Formula formula) {
     int fail;
-    for (int i = 0; i < interpretation_size; i++) {
+    for (int i = 0; i < interpretation_size; ++i) {
         if (strcmp(interpretation[i].predicate_name, formula->predicate_name)
                 == 0) {
             if (formula->name_size != interpretation[i].name_size)
                 continue;
 
             fail = 0;
-            for (int j = 0; j < formula->name_size; j++) {
+            for (int j = 0; j < formula->name_size; ++j) {
                 
                 if (strcmp(formula->name[j], interpretation[i].name[j]) != 0) {
                     fail = 1;
@@ -442,14 +417,14 @@ bool is_true(Formula formula, Interpretation interpretation) {
  
 bool in_needtobetrue(Formula formula, struct t_f_table * tf_tb) {
     int fail;
-    for (int i = 0; i < tf_tb->needtobetrue_size; i++) {
+    for (int i = 0; i < tf_tb->needtobetrue_size; ++i) {
         if (strcmp(tf_tb->needtobetrue[i]->predicate_name,
                 formula->predicate_name) == 0) {
             if (formula->name_size != tf_tb->needtobetrue[i]->name_size) {
                 continue;
             }
             fail = 0;
-            for (int j = 0; j < formula->name_size; j++) {
+            for (int j = 0; j < formula->name_size; ++j) {
                 if (strcmp(formula->name[j], tf_tb->needtobetrue[i]->name[j])
                         != 0) {
                     fail = 1;
@@ -465,14 +440,14 @@ bool in_needtobetrue(Formula formula, struct t_f_table * tf_tb) {
  
 bool in_needtobefalse(Formula formula, struct t_f_table * tf_tb) {
     int fail;
-    for (int i = 0; i < tf_tb->needtobefalse_size; i++) {
+    for (int i = 0; i < tf_tb->needtobefalse_size; ++i) {
         if (strcmp(tf_tb->needtobefalse[i]->predicate_name,
                 formula->predicate_name) == 0) {
             if (formula->name_size != tf_tb->needtobefalse[i]->name_size) {
                 continue;
             }
             fail = 0;
-            for (int j = 0; j < formula->name_size; j++) {
+            for (int j = 0; j < formula->name_size; ++j) {
                 if (strcmp(formula->name[j], tf_tb->needtobefalse[i]->name[j])
                         != 0) {
                     fail = 1;
@@ -590,11 +565,11 @@ bool is_satisfiable(Formula formula) {
             printf("can't open\n");
         }
         
-        for (int i = 0; i < tf_tb->needtobetrue_size; i++) {
+        for (int i = 0; i < tf_tb->needtobetrue_size; ++i) {
             fprintf(fp, "%s", tf_tb->needtobetrue[i]->predicate_name);
             if (tf_tb->needtobetrue[i]->name_size) {
                 fprintf(fp, "(");
-                for (int j = 0; j < tf_tb->needtobetrue[i]->name_size; j++) {
+                for (int j = 0; j < tf_tb->needtobetrue[i]->name_size; ++j) {
                     fprintf(fp, "%s", tf_tb->needtobetrue[i]->name[j]);
                     if (j != tf_tb->needtobetrue[i]->name_size - 1) {
                         fprintf(fp, ",");

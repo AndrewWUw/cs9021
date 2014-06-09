@@ -31,6 +31,13 @@ struct interpretation {
     char *name[100];
 } interpretation[1000];
 
+bool findspace(char * buf);
+bool findspace(char * buf);
+Formula parse_formula(char ** buf);
+int is_C_identifiers(char c);
+char * match(char * buf, char * partner);
+char * passspace(char * buf);
+
 int get_File_Contents(FILE *file, char *file_buf[]) {
     char *buf = malloc(sizeof(char) * MAXSIZE);
     char *token;
@@ -50,7 +57,6 @@ int get_File_Contents(FILE *file, char *file_buf[]) {
             ++i;
         }
     }
-
     free(buf);
 
 //    for (int j = 0; j < i; ++j) {
@@ -80,9 +86,22 @@ void get_predicates(FILE * file) {
 
 Formula make_formula() {
     char *buf = malloc(sizeof(char) * MAXSIZE);
-    fgets(buf, MAXSIZE, stdin);
+//    fgets(buf, MAXSIZE, stdin);
 
+    int c;
+    int i = 0;
+    while ((c = getchar()) != EOF) {
+        if (c == '\n')
+            c = ' ';
+        buf[i] = c;
+        ++i;
+    }
     buf[strlen(buf) - 1] = '\0';
+
+//    printf("\n");
+//    for(int i = 0; i < strlen(buf); ++i)
+//        printf("%c", buf[i]);
+//    printf("\n");
 
     if (findspace(buf)) {
         if (buf[0] != '[')
@@ -101,7 +120,6 @@ bool findspace(char * buf) {
 
     return false;
 }
-
 
 Formula parse_formula(char ** buf) {
     // printf("parse_formula\n");
@@ -127,26 +145,9 @@ Formula parse_formula(char ** buf) {
 
         *buf = passspace(*buf);
 
-        if (strncmp(*buf, "or", 2) == 0) {
-            // printf("or\n");
-            ret->type = OR;
-            *buf = match(*buf, "or");
-        } else if (strncmp(*buf, "and", 3) == 0) {
-            // printf("and\n");
-            ret->type = AND;
-            *buf = match(*buf, "and");
-        } else if (strncmp(*buf, "implies", 7) == 0) {
-            // printf("implies\n");
-            ret->type = IMPLIES;
-            *buf = match(*buf, "implies");
-        } else if (strncmp(*buf, "iff", 3) == 0) {
-            // printf("iff\n");
-            ret->type = IFF;
-            *buf = match(*buf, "iff");
-        } else {
-            ret = NULL;
+        check_relation_opts(buf, &ret);
+        if (ret == NULL)
             return ret;
-        }
 
         *buf = passspace(*buf);
 
@@ -223,6 +224,29 @@ Formula parse_formula(char ** buf) {
     return ret;
 }
 
+void check_relation_opts(char ** buf, Formula* ret) {
+
+    if (strncmp(*buf, "or", 2) == 0) {
+        // printf("or\n");
+        (*ret)->type = OR;
+        *buf = match(*buf, "or");
+    } else if (strncmp(*buf, "and", 3) == 0) {
+        // printf("and\n");
+        (*ret)->type = AND;
+        *buf = match(*buf, "and");
+    } else if (strncmp(*buf, "implies", 7) == 0) {
+        // printf("implies\n");
+        (*ret)->type = IMPLIES;
+        *buf = match(*buf, "implies");
+    } else if (strncmp(*buf, "iff", 3) == 0) {
+        // printf("iff\n");
+        (*ret)->type = IFF;
+        *buf = match(*buf, "iff");
+    } else {
+        ret = NULL;
+    }
+
+}
 
 int is_C_identifiers(char c) {
     if (c >= 'a' && c <= 'z') {

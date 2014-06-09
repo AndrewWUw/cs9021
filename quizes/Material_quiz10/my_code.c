@@ -39,9 +39,11 @@ bool is_correct_prefix_expression(Stack * const pt_to_stack) {
         }
     }
 
-    if (!isdigit(
-            items[height - 1]) || (operatorSum + 1 != digitSum)|| ! isdigit(items[height - 2])) {
+    if (!isdigit(items[height - 1]) || (operatorSum + 1 != digitSum)) {
         return false;
+    } else if (height >= 2) {
+        if (!isdigit(items[height - 2]))
+            return false;
     } else if (height == 1) {
         if (isdigit(items[0]))
             return true;
@@ -63,10 +65,10 @@ Value evaluate_expression(Stack * const pt_to_stack) {
         pop(pt_to_stack, &items[i]);
     }
 
-    for (int i = 0; i < height; ++i) {
-        printf("%c ", items[i]);
-    }
-    printf("\n");
+//    for (int i = 0; i < height; ++i) {
+//        printf("%c ", items[i]);
+//    }
+//    printf("\n");
 
     for (int i = 0; i < height; ++i) {
         if (items[i] == '+') {
