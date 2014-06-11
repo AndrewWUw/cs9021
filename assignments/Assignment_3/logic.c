@@ -155,11 +155,11 @@ void get_input_formula(char *buf) {
             c = ' ';
 
         if (isspace(c)) {
-            if (buf[i - 1] == ' ' || buf[i - 1] == '[' || buf[i - 1] == '(')
+            if (buf[i - 1] == ' ' || buf[i - 1] == '[' || buf[i - 1] == '(' || buf[i - 1] == ',')
                 continue;
         } else if (isspace(c)) {
             continue;
-        } else if ((c == ']' || c == ')' || c == '(') && (buf[i - 1] == ' ')) {
+        } else if ((c == ']' || c == ')' || c == '(' || c == ',') && (buf[i - 1] == ' ')) {
             buf[i - 1] = c;
             continue;
         }
