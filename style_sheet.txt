@@ -15,4 +15,4 @@ Number of spaces for indentation (may vary between 3 and 5)				 4
 Opening curly braces on same line as function name to open function body		 yes
 Opening curly braces on same line as while, do, for, if, else or switch to open block	 yes
 If directly following else is on same line as else     	  	      	    		 yes
-Else following closing brace of body of if statement is on same line as brace		 no
+Else following closing brace of body of if statement is on same line as brace		 yes
